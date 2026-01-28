@@ -45,29 +45,29 @@ A machine learning-powered health assistant that provides disease predictions ba
 ## Project Structure
 
 ```
-healthcare_ai/
-├── app.py                    # Main Flask application
-├── config.py                 # Configuration settings
-├── requirements.txt          # Python dependencies
+EazyHealth/
+├── app.py                   
+├── config.py                
+├── requirements.txt          
 ├── README.md
 ├── models/
 │   ├── __init__.py
-│   ├── disease_predictor.py  # ML model implementation
-│   └── trained_model.joblib  # Saved model (auto-generated)
+│   ├── disease_predictor.py 
+│   └── trained_model.joblib  
 ├── data/
-│   ├── diseases.json         # Disease database
-│   └── symptoms.json         # Symptom mappings & synonyms
+│   ├── diseases.json         
+│   └── symptoms.json         
 ├── utils/
 │   ├── __init__.py
-│   ├── sanitizer.py          # Input sanitization
-│   └── emergency.py          # Emergency detection
+│   ├── sanitizer.py          
+│   └── emergency.py          
 ├── templates/
-│   └── index.html            # Main HTML template
+│   └── index.html            
 └── static/
     ├── css/
-    │   └── styles.css        # Custom styles
+    │   └── styles.css        
     └── js/
-        └── main.js           # Frontend JavaScript
+        └── main.js           
 ```
 
 ## Installation
@@ -81,7 +81,7 @@ healthcare_ai/
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd healthcare_ai
+cd EazyHealth
 ```
 
 2. **Create a virtual environment** (recommended)
@@ -122,59 +122,6 @@ http://localhost:5000
 - The app works without scikit-learn
 - Or install Build Tools from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
-## API Endpoints
-
-### Disease Prediction
-```http
-POST /api/predict
-Content-Type: application/json
-
-{
-    "symptoms": ["fever", "cough", "fatigue"],
-    "duration": "1_to_3_days",
-    "age": 35
-}
-```
-
-### BMI Calculation
-```http
-POST /api/bmi
-Content-Type: application/json
-
-{
-    "weight": 70,
-    "height": 175,
-    "age": 30,
-    "gender": "male",
-    "activity": 1.55
-}
-```
-
-### Health Chat
-```http
-POST /api/chat
-Content-Type: application/json
-
-{
-    "message": "What should I do for a headache?"
-}
-```
-
-### Get Model Metrics
-```http
-GET /api/model/metrics
-```
-
-### Get Symptoms
-```http
-GET /api/symptoms
-```
-
-### Get Diseases
-```http
-GET /api/diseases
-```
-
 ## ML Model Details
 
 ### Architecture
@@ -193,79 +140,6 @@ GET /api/diseases
 - Synonym resolution for natural input
 - Duration and age-based risk adjustment
 - Confidence scoring with symptom matching
-
-## Configuration
-
-Edit `config.py` to customize:
-
-```python
-class Config:
-    MODEL_PATH = 'models/trained_model.joblib'
-    MIN_CONFIDENCE_THRESHOLD = 0.15
-    MAX_PREDICTIONS = 5
-    EMERGENCY_URGENCY_THRESHOLD = 4
-```
-
-## Environment Variables
-
-```bash
-# Optional
-export SECRET_KEY=your-secret-key
-export DEBUG=False
-export PORT=5000
-```
-
-## Development
-
-### Running in Debug Mode
-```bash
-export DEBUG=True
-python app.py
-```
-
-### Running Tests
-```bash
-python -m pytest tests/
-```
-
-### Adding New Diseases
-Edit `data/diseases.json`:
-```json
-{
-    "New Disease": {
-        "category": "Category",
-        "symptoms": ["symptom1", "symptom2"],
-        "weights": {"symptom1": 0.9, "symptom2": 0.8},
-        "severity": "moderate",
-        "urgency": 2,
-        "description": "Description...",
-        "recommendations": "Recommendations...",
-        "precautions": ["Precaution 1", "Precaution 2"],
-        "when_to_seek_help": "When to seek help...",
-        "risk_factors": ["Risk 1", "Risk 2"]
-    }
-}
-```
-
-After adding, delete `models/trained_model.joblib` to retrain.
-
-## Production Deployment
-
-### Using Gunicorn
-```bash
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
-
-### Docker
-```dockerfile
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 5000
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
-```
 
 ## Known Limitations
 
@@ -299,5 +173,6 @@ This project is for educational purposes only. Not licensed for commercial medic
 - UI built with Tailwind CSS
 
 ---
+
 
 **⚠️ Remember: Always consult healthcare professionals for medical advice. This tool is for educational purposes only.**
