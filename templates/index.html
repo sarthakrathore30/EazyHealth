@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthCare AI - Intelligent Disease Prediction System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="bg-slate-950 min-h-screen text-white font-inter">
+    <!-- Animated Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow animation-delay-2000"></div>
+        <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow animation-delay-4000"></div>
+    </div>
+
+    <!-- Emergency Banner -->
+    <div id="emergencyBanner" class="hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 to-red-700 text-white p-4 text-center shadow-2xl emergency-alert">
+        <div class="container mx-auto flex items-center justify-center gap-4">
+            <span class="text-2xl">🚨</span>
+            <span><strong>EMERGENCY DETECTED:</strong> <span id="emergencyMessage"></span></span>
+            <button onclick="hideEmergency()" class="ml-4 bg-white/20 hover:bg-white/30 px-4 py-1 rounded-full text-sm transition">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Medical Disclaimer Modal -->
+    <div id="disclaimerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm modal visible">
+        <div class="glass-card rounded-3xl p-8 max-w-lg mx-4 border border-white/10 shadow-2xl animate-scale-in">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
+                    <span class="text-4xl">⚕️</span>
+                </div>
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Medical Disclaimer</h2>
+            </div>
+            <div class="text-gray-300 space-y-4 text-sm leading-relaxed">
+                <div class="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                    <span class="text-yellow-400 text-xl">⚠️</span>
+                    <p><strong class="text-yellow-400">Important:</strong> This application is for <strong>educational and informational purposes only</strong>.</p>
+                </div>
+                <p class="text-gray-400">This tool does <strong class="text-white">NOT</strong> provide medical diagnosis, treatment advice, or professional healthcare services.</p>
+                <ul class="space-y-2 ml-2">
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span> Always consult a qualified healthcare professional</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span> Never delay seeking medical advice based on this tool</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span> In case of emergency, call your local emergency number</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span> AI predictions have limitations and may be inaccurate</li>
+                </ul>
+                <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                    <p class="text-red-300 text-xs">If you experience severe symptoms like chest pain, difficulty breathing, severe bleeding, or loss of consciousness, <strong>call emergency services immediately</strong>.</p>
+                </div>
+            </div>
+            <button onclick="acceptDisclaimer()" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02]">
+                I Understand and Accept
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="mainApp" class="hidden relative z-10">
+        <!-- Header -->
+        <header class="border-b border-white/5 backdrop-blur-xl bg-slate-950/50 sticky top-0 z-40">
+            <div class="container mx-auto px-6 py-4">
+                <nav class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                            <span class="text-2xl">🏥</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">EazyHealth AI</h1>
+                            <p class="text-xs text-gray-500">Machine Learning Powered</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <div class="hidden md:flex items-center gap-2 text-sm bg-white/5 px-4 py-2 rounded-full" id="modelStatus">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                            <span class="text-gray-400">Loading Model...</span>
+                        </div>
+                        <button onclick="showDisclaimer()" class="text-gray-400 hover:text-white text-sm flex items-center gap-2 transition">
+                            <span>⚠️</span>
+                            <span class="hidden md:inline">Disclaimer</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="container mx-auto px-6 py-12">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">Intelligent Health</span>
+                    <br>
+                    <span class="text-white">Prediction System</span>
+                </h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Powered by advanced machine learning algorithms to help you understand your symptoms and make informed health decisions.</p>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                <div class="stat-card group">
+                    <div class="text-3xl font-bold text-blue-400 group-hover:scale-110 transition-transform" id="diseaseCount">0</div>
+                    <div class="text-xs text-gray-500 mt-1">Diseases in Database</div>
+                </div>
+                <div class="stat-card group">
+                    <div class="text-3xl font-bold text-purple-400 group-hover:scale-110 transition-transform" id="symptomCount">0</div>
+                    <div class="text-xs text-gray-500 mt-1">Symptoms Tracked</div>
+                </div>
+                <div class="stat-card group">
+                    <div class="text-3xl font-bold text-emerald-400 group-hover:scale-110 transition-transform" id="accuracyRate">--</div>
+                    <div class="text-xs text-gray-500 mt-1">Model Accuracy</div>
+                </div>
+                <div class="stat-card group">
+                    <div class="text-3xl font-bold text-amber-400 group-hover:scale-110 transition-transform" id="predictionCount">0</div>
+                    <div class="text-xs text-gray-500 mt-1">Predictions Made</div>
+                </div>
+            </div>
+
+            <!-- Feature Cards -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <!-- AI Symptom Checker -->
+                <div onclick="openModal('symptomChecker')" class="feature-card group">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-3xl shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform">
+                            🧠
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20">ML-Powered</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-blue-400 transition">AI Symptom Analyzer</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Real machine learning model with Random Forest & Gradient Boosting for accurate disease prediction based on your symptoms.</p>
+                    <div class="mt-4 flex items-center text-blue-400 text-sm font-medium">
+                        Start Analysis <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
+
+                <!-- BMI Calculator -->
+                <div onclick="openModal('bmiCalculator')" class="feature-card group">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/25 group-hover:scale-110 transition-transform">
+                            ⚖️
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">Health Metrics</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-emerald-400 transition">BMI Calculator</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Calculate your Body Mass Index with personalized health insights based on age, gender, and activity level.</p>
+                    <div class="mt-4 flex items-center text-emerald-400 text-sm font-medium">
+                        Calculate Now <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
+
+                <!-- Health Chatbot -->
+                <div onclick="openModal('chatbot')" class="feature-card group">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-3xl shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform">
+                            💬
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-purple-500/10 text-purple-400 rounded-full border border-purple-500/20">NLP</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-purple-400 transition">Health Assistant</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Chat with our AI assistant for health information with context-aware responses and wellness guidance.</p>
+                    <div class="mt-4 flex items-center text-purple-400 text-sm font-medium">
+                        Start Chat <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
+
+                <!-- Disease Database -->
+                <div onclick="openModal('diseaseDb')" class="feature-card group">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-3xl shadow-lg shadow-orange-500/25 group-hover:scale-110 transition-transform">
+                            📚
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-orange-500/10 text-orange-400 rounded-full border border-orange-500/20">Database</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-orange-400 transition">Disease Encyclopedia</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Browse our comprehensive database with 70+ diseases, symptoms, causes, and treatment information.</p>
+                    <div class="mt-4 flex items-center text-orange-400 text-sm font-medium">
+                        Browse Database <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
+
+                <!-- Health Records -->
+                <div onclick="openModal('records')" class="feature-card group">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center text-3xl shadow-lg shadow-cyan-500/25 group-hover:scale-110 transition-transform">
+                            📋
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20">History</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-cyan-400 transition">Health Records</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Track your health history with secure local storage. View past predictions and BMI calculations.</p>
+                    <div class="mt-4 flex items-center text-cyan-400 text-sm font-medium">
+                        View Records <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
+
+                <!-- Emergency Info -->
+                <div onclick="openModal('emergency')" class="feature-card group border-red-500/20 hover:border-red-500/40">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-3xl shadow-lg shadow-red-500/25 group-hover:scale-110 transition-transform">
+                            🚨
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-red-500/10 text-red-400 rounded-full border border-red-500/20">Critical</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-red-400 transition">Emergency Guide</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Know when to seek immediate medical attention. Emergency resources and warning signs.</p>
+                    <div class="mt-4 flex items-center text-red-400 text-sm font-medium">
+                        View Guide <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Model Info -->
+            <div class="glass-card rounded-2xl p-8 border border-white/5">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span class="text-xl">🤖</span>
+                    </div>
+                    <h3 class="text-xl font-bold">How Our ML Model Works</h3>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="p-5 bg-white/5 rounded-xl border border-white/5 hover:border-blue-500/30 transition">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
+                            <span class="text-blue-400 font-bold">1</span>
+                        </div>
+                        <h4 class="font-semibold text-blue-400 mb-2">Symptom Vectorization</h4>
+                        <p class="text-gray-400 text-sm">Symptoms are converted to weighted numerical vectors using TF-IDF-like encoding with synonym resolution.</p>
+                    </div>
+                    <div class="p-5 bg-white/5 rounded-xl border border-white/5 hover:border-purple-500/30 transition">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4">
+                            <span class="text-purple-400 font-bold">2</span>
+                        </div>
+                        <h4 class="font-semibold text-purple-400 mb-2">Ensemble Classification</h4>
+                        <p class="text-gray-400 text-sm">Random Forest + Gradient Boosting ensemble trained on augmented disease-symptom data with cross-validation.</p>
+                    </div>
+                    <div class="p-5 bg-white/5 rounded-xl border border-white/5 hover:border-emerald-500/30 transition">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+                            <span class="text-emerald-400 font-bold">3</span>
+                        </div>
+                        <h4 class="font-semibold text-emerald-400 mb-2">Risk-Adjusted Scoring</h4>
+                        <p class="text-gray-400 text-sm">Predictions adjusted for symptom duration, age-based risk factors, and symptom weight matching.</p>
+                    </div>
+                </div>
+                <div class="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm text-amber-300 flex items-start gap-3">
+                    <span class="text-lg">⚠️</span>
+                    <span>Model accuracy shown is from actual cross-validation testing on the training data, not a fabricated metric.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-white/5 mt-12">
+            <div class="container mx-auto px-6 py-8 text-center">
+                <p class="text-gray-500 text-sm mb-2">⚠️ This is an educational tool. Always consult healthcare professionals for medical advice.</p>
+                <p class="text-gray-600 text-xs">© 2024 HealthCare AI - For educational purposes only</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Symptom Checker Modal -->
+    <div id="symptomChecker" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('symptomChecker')"></div>
+        <div class="modal-content max-w-4xl">
+            <div class="modal-header">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-xl">🧠</span>
+                        AI Symptom Analyzer
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Select your symptoms for ML-powered analysis</p>
+                </div>
+                <button onclick="closeModal('symptomChecker')" class="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Patient Info -->
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Age (optional, for risk assessment)</label>
+                        <input type="number" id="patientAge" class="input-field" placeholder="e.g., 35" min="1" max="120">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Symptom Duration</label>
+                        <select id="symptomDuration" class="input-field">
+                            <option value="less_than_24_hours">Less than 24 hours</option>
+                            <option value="1_to_3_days" selected>1-3 days</option>
+                            <option value="3_to_7_days">3-7 days</option>
+                            <option value="1_to_2_weeks">1-2 weeks</option>
+                            <option value="more_than_2_weeks">More than 2 weeks</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Symptom Categories -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Filter by category:</label>
+                    <div class="flex flex-wrap gap-2" id="categoryFilters"></div>
+                </div>
+
+                <!-- Symptom Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Select your symptoms:</label>
+                    <div class="symptom-container" id="symptomTags"></div>
+                </div>
+
+                <!-- Selected Symptoms -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Selected symptoms (<span id="selectedCount" class="text-blue-400 font-bold">0</span>):</label>
+                    <div class="min-h-[60px] bg-white/5 rounded-xl p-4 border border-white/10" id="selectedSymptoms">
+                        <span class="text-gray-500 text-sm">No symptoms selected yet</span>
+                    </div>
+                </div>
+
+                <!-- Analyze Button -->
+                <button onclick="analyzeSymptoms()" id="analyzeBtn" class="w-full btn-primary py-4">
+                    <span class="flex items-center justify-center gap-2">
+                        <span>🔬</span> Analyze with ML Model
+                    </span>
+                </button>
+
+                <!-- Results -->
+                <div id="analysisResults" class="mt-6 hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BMI Calculator Modal -->
+    <div id="bmiCalculator" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('bmiCalculator')"></div>
+        <div class="modal-content max-w-md">
+            <div class="modal-header">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-xl">⚖️</span>
+                        BMI Calculator
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Get personalized health insights</p>
+                </div>
+                <button onclick="closeModal('bmiCalculator')" class="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
+                        <input type="number" id="bmiWeight" class="input-field" placeholder="e.g., 70" min="20" max="500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Height (cm)</label>
+                        <input type="number" id="bmiHeight" class="input-field" placeholder="e.g., 175" min="50" max="300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Age</label>
+                        <input type="number" id="bmiAge" class="input-field" placeholder="e.g., 30" min="1" max="120">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Gender</label>
+                        <select id="bmiGender" class="input-field">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Activity Level</label>
+                        <select id="bmiActivity" class="input-field">
+                            <option value="1.2">Sedentary (little or no exercise)</option>
+                            <option value="1.375">Lightly active (1-3 days/week)</option>
+                            <option value="1.55">Moderately active (3-5 days/week)</option>
+                            <option value="1.725">Very active (6-7 days/week)</option>
+                            <option value="1.9">Extra active (very hard exercise)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="calculateBMI()" class="w-full btn-primary py-4 mt-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500">
+                    Calculate BMI
+                </button>
+
+                <div id="bmiResults" class="mt-6 hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Modal -->
+    <div id="chatbot" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('chatbot')"></div>
+        <div class="modal-content max-w-lg h-[600px] flex flex-col">
+            <div class="modal-header flex-shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-xl">💬</span>
+                        Health Assistant
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Ask me about health topics</p>
+                </div>
+                <button onclick="closeModal('chatbot')" class="modal-close">&times;</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chatMessages">
+                <div class="chat-message bot">
+                    <p>Hello! I'm your health assistant. I can help you with:</p>
+                    <ul class="text-sm text-gray-400 mt-2 ml-4 list-disc">
+                        <li>General health information</li>
+                        <li>Wellness tips</li>
+                        <li>Understanding symptoms</li>
+                        <li>Lifestyle advice</li>
+                    </ul>
+                    <p class="text-xs text-amber-400 mt-3 flex items-center gap-1">
+                        <span>⚠️</span> I cannot provide medical diagnosis. Always consult a doctor for health concerns.
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-white/10 flex-shrink-0">
+                <div class="flex gap-3">
+                    <input type="text" id="chatInput" class="input-field flex-1" placeholder="Type your question..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                    <button onclick="sendChatMessage()" class="btn-primary px-6">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disease Database Modal -->
+    <div id="diseaseDb" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('diseaseDb')"></div>
+        <div class="modal-content max-w-4xl h-[80vh] flex flex-col">
+            <div class="modal-header flex-shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-xl">📚</span>
+                        Disease Encyclopedia
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Browse our comprehensive database</p>
+                </div>
+                <button onclick="closeModal('diseaseDb')" class="modal-close">&times;</button>
+            </div>
+            
+            <div class="p-6 border-b border-white/10 flex-shrink-0">
+                <input type="text" id="diseaseSearch" class="input-field mb-4" placeholder="Search diseases..." oninput="searchDiseases()">
+                <div class="flex flex-wrap gap-2" id="diseaseCategoryFilters"></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6" id="diseaseList"></div>
+        </div>
+    </div>
+
+    <!-- Health Records Modal -->
+    <div id="records" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('records')"></div>
+        <div class="modal-content max-w-2xl">
+            <div class="modal-header">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center text-xl">📋</span>
+                        Health Records
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Your health history</p>
+                </div>
+                <button onclick="closeModal('records')" class="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="mb-8">
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-sm">🔬</span>
+                        Prediction History
+                    </h3>
+                    <div id="predictionHistory" class="space-y-3"></div>
+                </div>
+                <div class="mb-8">
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center text-sm">⚖️</span>
+                        BMI History
+                    </h3>
+                    <div id="bmiHistory" class="space-y-3"></div>
+                </div>
+                <button onclick="clearAllRecords()" class="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
+                    Clear All Records
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Modal -->
+    <div id="emergency" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('emergency')"></div>
+        <div class="modal-content max-w-2xl">
+            <div class="modal-header bg-red-900/30">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3 text-red-400">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-xl">🚨</span>
+                        Emergency Guide
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Know when to seek immediate help</p>
+                </div>
+                <button onclick="closeModal('emergency')" class="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="bg-red-900/30 border border-red-500/50 rounded-xl p-5 mb-6">
+                    <h3 class="font-bold text-red-400 mb-4 flex items-center gap-2">
+                        <span>⚠️</span> CALL EMERGENCY SERVICES IMMEDIATELY IF:
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Chest pain or pressure lasting more than a few minutes</li>
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Difficulty breathing or shortness of breath</li>
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Sudden numbness or weakness (especially on one side)</li>
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Sudden confusion or trouble speaking</li>
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Severe bleeding that won't stop</li>
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Loss of consciousness</li>
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Severe allergic reaction (anaphylaxis)</li>
+                        <li class="flex items-start gap-3"><span class="text-red-400 mt-0.5">•</span> Signs of stroke (FAST: Face drooping, Arm weakness, Speech difficulty, Time to call)</li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white/5 rounded-xl p-4 text-center border border-white/10">
+                        <h4 class="font-semibold mb-2">Emergency Response Support System (ERSS)</h4>
+                        <p class="text-3xl font-bold text-red-400">112</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 text-center border border-white/10">
+                        <h4 class="font-semibold mb-2">Anti-Poison</h4>
+                        <p class="text-3xl font-bold text-red-400">1066</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 text-center border border-white/10">
+                        <h4 class="font-semibold mb-2">IN Emergency</h4>
+                        <p class="text-3xl font-bold text-red-400">112</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 text-center border border-white/10">
+                        <h4 class="font-semibold mb-2">🆘 Mental Health (INDIA)</h4>
+                        <p class="text-3xl font-bold text-red-400">14416</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-900/30 border border-amber-500/50 rounded-xl p-5">
+                    <h3 class="font-bold text-amber-400 mb-4">📞 See a Doctor Within 24 Hours If:</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">•</span> Fever above 103°F (39.4°C)</li>
+                        <li class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">•</span> Symptoms worsening despite treatment</li>
+                        <li class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">•</span> Severe or unusual headache</li>
+                        <li class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">•</span> Signs of dehydration</li>
+                        <li class="flex items-start gap-3"><span class="text-amber-400 mt-0.5">•</span> Persistent vomiting or diarrhea</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+{
+  "symptom_synonyms": {
+    "fever": ["high temperature", "pyrexia", "febrile", "elevated temperature", "hot", "burning up", "high fever", "low grade fever"],
+    "headache": ["head pain", "cephalalgia", "migraine", "head hurts", "pounding head", "throbbing head"],
+    "cough": ["coughing", "hacking", "dry cough", "wet cough", "productive cough", "persistent cough", "chronic cough", "mild cough"],
+    "fatigue": ["tiredness", "exhaustion", "weariness", "lethargy", "lack of energy", "tired", "worn out", "severe fatigue", "extreme fatigue", "mild fatigue"],
+    "nausea": ["queasy", "sick to stomach", "feeling sick", "nauseated", "upset stomach"],
+    "vomiting": ["throwing up", "puking", "emesis", "being sick"],
+    "diarrhea": ["loose stools", "watery stool", "frequent bowel movements", "runs", "persistent diarrhea"],
+    "chest pain": ["chest discomfort", "chest tightness", "chest pressure", "angina", "chest hurts", "severe chest pain"],
+    "shortness of breath": ["breathlessness", "dyspnea", "difficulty breathing", "cant breathe", "hard to breathe", "breathing problems", "rapid breathing"],
+    "dizziness": ["lightheaded", "vertigo", "woozy", "unsteady", "spinning sensation", "room spinning", "lightheadedness"],
+    "sore throat": ["throat pain", "scratchy throat", "pharyngitis", "throat hurts", "painful throat", "severe sore throat"],
+    "runny nose": ["nasal discharge", "rhinorrhea", "drippy nose", "nose running"],
+    "body aches": ["muscle pain", "myalgia", "body pain", "aching", "soreness", "muscle aches"],
+    "chills": ["shivering", "rigors", "feeling cold", "shaking"],
+    "sweating": ["perspiration", "diaphoresis", "night sweats", "excessive sweating", "cold sweat"],
+    "abdominal pain": ["stomach pain", "belly pain", "tummy ache", "stomach cramps", "gut pain", "upper abdominal pain"],
+    "joint pain": ["arthralgia", "joint ache", "joints hurt", "painful joints"],
+    "rash": ["skin rash", "skin eruption", "hives", "skin irritation", "red patches", "painful rash"],
+    "swelling": ["edema", "puffiness", "bloating", "swollen", "inflammation"],
+    "weakness": ["feebleness", "debility", "feeling weak", "no strength", "muscle weakness"],
+    "loss of appetite": ["anorexia", "not hungry", "decreased appetite", "no appetite", "reduced appetite"],
+    "weight loss": ["losing weight", "weight reduction", "unexplained weight loss", "unintentional weight loss"],
+    "weight gain": ["gaining weight", "increased weight", "sudden weight gain"],
+    "insomnia": ["cant sleep", "sleep problems", "sleeplessness", "difficulty sleeping", "trouble sleeping"],
+    "anxiety": ["nervousness", "worry", "anxious", "panic", "nervous", "excessive worry"],
+    "depression": ["sad", "hopeless", "depressed", "low mood", "persistent sadness"],
+    "confusion": ["disorientation", "mental confusion", "brain fog", "cognitive difficulties", "altered mental state"],
+    "vision problems": ["blurred vision", "vision changes", "seeing spots", "visual disturbances", "sudden vision problems"],
+    "hearing problems": ["hearing loss", "ringing in ears", "tinnitus", "hard of hearing"],
+    "numbness": ["tingling", "pins and needles", "paresthesia", "loss of sensation", "tingling in hands or feet"],
+    "palpitations": ["heart racing", "racing heart", "rapid heartbeat", "heart pounding", "irregular heartbeat", "fluttering in chest"],
+    "constipation": ["difficulty passing stool", "hard stool", "infrequent bowel movements"],
+    "bloating": ["feeling bloated", "abdominal bloating", "gas", "distended abdomen"],
+    "heartburn": ["acid reflux", "indigestion", "acid indigestion", "burning in chest"],
+    "back pain": ["backache", "lumbar pain", "spine pain", "back hurts"],
+    "neck pain": ["neck ache", "stiff neck", "neck stiffness", "cervical pain"],
+    "frequent urination": ["urinary frequency", "peeing a lot", "going to bathroom often"],
+    "painful urination": ["burning urination", "dysuria", "hurts to pee"],
+    "blood in urine": ["hematuria", "bloody urine", "pink urine", "red urine", "pink or red urine"],
+    "itching": ["pruritus", "itchy", "scratching", "skin itching", "itchy skin"],
+    "sneezing": ["sneezes", "achoo", "nasal irritation"],
+    "congestion": ["nasal congestion", "stuffy nose", "blocked nose", "stuffiness"],
+    "wheezing": ["whistling breath", "noisy breathing", "chest wheeze"],
+    "loss of taste": ["ageusia", "cant taste", "no taste", "taste loss"],
+    "loss of smell": ["anosmia", "cant smell", "no smell", "smell loss", "reduced sense of smell"],
+    "tremor": ["shaking", "trembling", "shaky hands", "tremor at rest"],
+    "seizures": ["convulsions", "fits", "epileptic episodes"],
+    "fainting": ["syncope", "passing out", "loss of consciousness", "blackout"]
+  },
+  "emergency_symptoms": [
+    "severe chest pain",
+    "chest pressure",
+    "difficulty breathing",
+    "shortness of breath",
+    "sudden numbness face or limbs",
+    "trouble speaking",
+    "loss of consciousness",
+    "coughing up blood",
+    "sudden severe headache",
+    "pain radiating to arm",
+    "severe abdominal pain right side",
+    "thoughts of death",
+    "thoughts of suicide",
+    "seizures",
+    "facial drooping",
+    "slurred speech",
+    "severe allergic reaction",
+    "anaphylaxis",
+    "inability to breathe",
+    "severe bleeding",
+    "loss of vision",
+    "stiff neck with fever",
+    "bluish lips",
+    "confusion with fever",
+    "high body temperature",
+    "altered mental state",
+    "arm weakness"
+  ],
+  "symptom_categories": {
+    "Respiratory": [
+      "cough", "dry cough", "mild cough", "persistent cough", "chronic cough", "productive cough",
+      "shortness of breath", "difficulty breathing", "rapid breathing", "wheezing",
+      "nasal congestion", "runny nose", "sneezing", "sore throat", "chest tightness",
+      "mucus production", "coughing up blood", "hoarseness"
+    ],
+    "Cardiovascular": [
+      "chest pain", "severe chest pain", "chest pressure", "chest discomfort",
+      "palpitations", "irregular heartbeat", "rapid heartbeat", "racing heart",
+      "pain radiating to arm", "cold sweat", "swollen legs", "swollen ankles",
+      "leg pain when walking", "weak pulse in legs"
+    ],
+    "Gastrointestinal": [
+      "nausea", "vomiting", "diarrhea", "constipation", "abdominal pain",
+      "stomach cramps", "bloating", "gas", "heartburn", "acid reflux",
+      "loss of appetite", "blood in stool", "black stools", "difficulty swallowing",
+      "regurgitation", "indigestion", "burning sensation in stomach"
+    ],
+    "Neurological": [
+      "headache", "severe headache", "dizziness", "confusion", "numbness",
+      "tingling", "seizures", "vision changes", "memory problems", "difficulty concentrating",
+      "tremor", "loss of balance", "fainting", "slurred speech", "stiff neck"
+    ],
+    "Musculoskeletal": [
+      "joint pain", "muscle pain", "back pain", "neck pain", "stiffness",
+      "swelling", "weakness", "muscle aches", "body aches", "limited range of motion",
+      "morning stiffness", "joint warmth", "bone pain"
+    ],
+    "Mental Health": [
+      "anxiety", "depression", "excessive worry", "restlessness", "irritability",
+      "mood swings", "hopelessness", "loss of interest", "sleep problems",
+      "difficulty concentrating", "fatigue", "feelings of worthlessness",
+      "thoughts of death", "panic attacks"
+    ],
+    "Skin": [
+      "rash", "itching", "dry skin", "redness", "swelling", "hives",
+      "skin discoloration", "blisters", "burning sensation", "cracked skin",
+      "red patches", "silvery scales", "pimples", "skin inflammation"
+    ],
+    "General": [
+      "fever", "high fever", "low grade fever", "fatigue", "weakness",
+      "chills", "sweating", "night sweats", "weight loss", "weight gain",
+      "malaise", "loss of appetite", "dehydration"
+    ],
+    "Urinary": [
+      "frequent urination", "painful urination", "burning urination",
+      "blood in urine", "cloudy urine", "strong smelling urine",
+      "urgency to urinate", "pelvic pain", "decreased urination"
+    ],
+    "Eye": [
+      "red eyes", "itchy eyes", "watery eyes", "eye discharge",
+      "vision problems", "blurred vision", "sensitivity to light",
+      "eye pain", "seeing halos", "tunnel vision"
+    ],
+    "Ear Nose Throat": [
+      "sore throat", "swollen lymph nodes", "ear pain", "ringing in ears",
+      "hearing loss", "nasal congestion", "runny nose", "post nasal drip",
+      "hoarseness", "difficulty swallowing"
+    ]
+  },
+  "severity_modifiers": {
+    "severe": 1.5,
+    "mild": 0.7,
+    "moderate": 1.0,
+    "sudden": 1.3,
+    "chronic": 0.9,
+    "persistent": 1.1,
+    "intermittent": 0.8,
+    "acute": 1.4,
+    "extreme": 1.6,
+    "slight": 0.6
+  },
+  "duration_weights": {
+    "less_than_24_hours": 0.8,
+    "1_to_3_days": 1.0,
+    "3_to_7_days": 1.1,
+    "1_to_2_weeks": 1.2,
+    "more_than_2_weeks": 1.3
+  },
+  "age_risk_factors": {
+    "0-2": {
+      "high_risk_conditions": ["Meningitis", "Pneumonia", "Gastroenteritis", "Bronchitis"],
+      "risk_multiplier": 1.3
+    },
+    "3-12": {
+      "high_risk_conditions": ["Strep Throat", "Asthma", "Allergic Rhinitis", "Conjunctivitis"],
+      "risk_multiplier": 1.1
+    },
+    "13-25": {
+      "high_risk_conditions": ["Mononucleosis", "Anxiety Disorder", "Depression", "Acne"],
+      "risk_multiplier": 1.0
+    },
+    "26-50": {
+      "high_risk_conditions": ["Hypertension", "Type 2 Diabetes", "GERD", "Migraine", "Depression"],
+      "risk_multiplier": 1.0
+    },
+    "51-65": {
+      "high_risk_conditions": ["Type 2 Diabetes", "Hypertension", "Osteoarthritis", "Coronary Artery Disease"],
+      "risk_multiplier": 1.2
+    },
+    "65+": {
+      "high_risk_conditions": ["Pneumonia", "Heart Attack", "Stroke", "Hypertension", "Heart Failure", "COPD", "Osteoporosis"],
+      "risk_multiplier": 1.4
+    }
+  }
+}
