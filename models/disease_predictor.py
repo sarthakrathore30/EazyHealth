@@ -1,6 +1,6 @@
 """
 Disease Prediction Model
-Works with or without scikit-learn - uses pure Python fallback if sklearn available
+Works with or without scikit-learn - uses pure Python fallback if sklearn not available
 """
 import json
 import os
