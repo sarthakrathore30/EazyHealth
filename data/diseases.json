@@ -2,7 +2,7 @@
   "diseases": {
     "Common Cold": {
       "category": "Respiratory",
-      "symptoms": ["runny nose", "sneezing", "sore throat", "mild cough", "nasal congestion", "mild fatigue", "watery eyes", "low grade fever"],
+      "symptoms": ["runny nose", "sneezing", "sore throat", "mild cough", "nasal congestion", "fatigue", "watery eyes", "low grade fever"],
       "weights": {"runny nose": 0.9, "sneezing": 0.85, "sore throat": 0.7, "mild cough": 0.6, "nasal congestion": 0.85, "mild fatigue": 0.4, "watery eyes": 0.5, "low grade fever": 0.3},
       "severity": "low",
       "urgency": 1,
