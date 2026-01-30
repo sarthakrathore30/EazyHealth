@@ -152,7 +152,7 @@ http://localhost:5000
 ## Future Improvements
 
 - [ ] Add more diseases to database
-- [ ] Implement deep learning models (TensorFlow/PyTorch)
+- [ ] Implement deep learning models
 - [ ] Add multi-language support
 - [ ] Integrate with medical APIs
 - [ ] Add user authentication
@@ -166,13 +166,6 @@ Contributions are welcome! Please read our contributing guidelines before submit
 
 This project is for educational purposes only. Not licensed for commercial medical use.
 
-## Acknowledgments
-
-- Disease information compiled from public health resources
-- ML implementation using scikit-learn
-- UI built with Tailwind CSS
-
----
-
 
 **⚠️ Remember: Always consult healthcare professionals for medical advice. This tool is for educational purposes only.**
+
