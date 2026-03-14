@@ -77,6 +77,33 @@ except ImportError as e:
                 call_emergency = False
             return Assessment()
 
+# Import feedback manager
+try:
+    from utils.feedback import FeedbackManager
+except ImportError as e:
+    print(f"Warning: feedback manager not available: {e}")
+    class FeedbackManager:
+        def __init__(self):
+            self.feedbacks = []
+        def add_feedback(self, prediction_id, rating, was_accurate, comment=""):
+            self.feedbacks.append({
+                'prediction_id': prediction_id,
+                'rating': rating,
+                'was_accurate': was_accurate,
+                'comment': comment,
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
+            return True
+        def get_summary(self):
+            if not self.feedbacks:
+                return {'total': 0, 'average_rating': 0, 'accuracy_rate': 0}
+            total = len(self.feedbacks)
+            avg = sum(f['rating'] for f in self.feedbacks) / total
+            accurate = sum(1 for f in self.feedbacks if f.get('was_accurate') is True)
+            return {'total': total, 'average_rating': round(avg, 1), 'accuracy_rate': round(accurate/total*100, 1)}
+        def get_recent(self, n=20):
+            return self.feedbacks[-n:]
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -93,9 +120,25 @@ print("Model initialization complete!")
 # Initialize emergency detector
 emergency_detector = EmergencyDetector(Config.SYMPTOMS_DATA_PATH)
 
+# Initialize feedback manager (Feature #18)
+feedback_manager = FeedbackManager()
+
 # In-memory storage for health records (in production, use a database)
 health_records = []
 bmi_records = []
+
+# Load health tips (Feature #19)
+health_tips_data = None
+try:
+    tips_path = os.path.join(os.path.dirname(__file__), 'data', 'health_tips.json')
+    if os.path.exists(tips_path):
+        with open(tips_path, 'r') as f:
+            health_tips_data = json.load(f)
+        print(f"Loaded {len(health_tips_data.get('tips', []))} health tips")
+    else:
+        print(f"Health tips file not found at {tips_path}, will use defaults")
+except Exception as e:
+    print(f"Warning: Could not load health tips: {e}")
 
 # Rate limiting decorator
 request_counts = {}
@@ -126,7 +169,6 @@ def rate_limit(max_requests=60, window=60):
             return f(*args, **kwargs)
         return wrapped
     return decorator
-
 
 # Chatbot knowledge base
 CHAT_KNOWLEDGE = {
@@ -176,7 +218,6 @@ CHAT_KNOWLEDGE = {
     }
 }
 
-
 # ============== ROUTES ==============
 
 @app.route('/')
@@ -184,14 +225,12 @@ def index():
     """Render main page"""
     return render_template('index.html')
 
-
 @app.route('/api/model/metrics', methods=['GET'])
 @rate_limit()
 def get_model_metrics():
     """Get ML model performance metrics"""
     metrics = disease_model.get_model_metrics()
     return jsonify(metrics)
-
 
 @app.route('/api/symptoms', methods=['GET'])
 @rate_limit()
@@ -205,7 +244,6 @@ def get_symptoms():
         'categories': categories
     })
 
-
 @app.route('/api/diseases', methods=['GET'])
 @rate_limit()
 def get_diseases():
@@ -213,19 +251,11 @@ def get_diseases():
     diseases = disease_model.get_all_diseases()
     return jsonify({'diseases': diseases})
 
-
 @app.route('/api/predict', methods=['POST'])
 @rate_limit(max_requests=30)
 def predict_disease():
     """
     Predict diseases based on symptoms using ML model
-    
-    Expected JSON:
-    {
-        "symptoms": ["symptom1", "symptom2", ...],
-        "duration": "1_to_3_days",
-        "age": 35  // optional
-    }
     """
     data = request.get_json()
     
@@ -294,22 +324,10 @@ def predict_disease():
         }
     })
 
-
 @app.route('/api/bmi', methods=['POST'])
 @rate_limit()
 def calculate_bmi():
-    """
-    Calculate BMI and provide health insights
-    
-    Expected JSON:
-    {
-        "weight": 70,
-        "height": 175,
-        "age": 30,
-        "gender": "male",
-        "activity": 1.55
-    }
-    """
+    """Calculate BMI and provide health insights"""
     data = request.get_json()
     
     if not data:
@@ -376,18 +394,10 @@ def calculate_bmi():
         'tdee': tdee
     })
 
-
 @app.route('/api/chat', methods=['POST'])
 @rate_limit()
 def chat():
-    """
-    Health chatbot endpoint
-    
-    Expected JSON:
-    {
-        "message": "user message here"
-    }
-    """
+    """Health chatbot endpoint"""
     data = request.get_json()
     
     if not data:
@@ -408,10 +418,10 @@ def chat():
         return jsonify({
             'response': """<span class='text-red-400 font-bold'>🚨 If this is a medical emergency, please call emergency services immediately:</span>
             <ul class='mt-2'>
-                <li><strong>US:</strong> 911</li>
-                <li><strong>UK:</strong> 1066</li>
-                <li><strong>EU:</strong> 112</li>
-                <li><strong>Mental Health Crisis (US):</strong> 988</li>
+            <li><strong>US:</strong> 911</li>
+            <li><strong>UK:</strong> 1066</li>
+            <li><strong>EU:</strong> 112</li>
+            <li><strong>Mental Health Crisis (US):</strong> 988</li>
             </ul>
             <p class='mt-2'>Do not wait for online advice in an emergency. Every minute can be critical.</p>"""
         })
@@ -425,7 +435,7 @@ def chat():
     # Check for thanks
     if any(word in message for word in CHAT_KNOWLEDGE['thanks']):
         return jsonify({
-            'response': "You're welcome! Remember, I provide general information only. Always consult healthcare professionals for medical advice. Stay healthy! 🏥"
+            'response': "You're welcome! Remember, I provide general information only. Always consult healthcare professionals for medical advice. Stay healthy! 💪"
         })
     
     # Find matching topic
@@ -452,15 +462,14 @@ def chat():
     return jsonify({
         'response': """I can help with general health information on topics like:
         <ul class='mt-2 space-y-1'>
-            <li>• Common symptoms (fever, headache, cold)</li>
-            <li>• Lifestyle (diet, exercise, sleep, stress)</li>
-            <li>• Conditions (diabetes, heart health)</li>
-            <li>• Prevention (vaccination, hydration)</li>
+        <li>• Common symptoms (fever, headache, cold)</li>
+        <li>• Lifestyle (diet, exercise, sleep, stress)</li>
+        <li>• Conditions (diabetes, heart health)</li>
+        <li>• Prevention (vaccination, hydration)</li>
         </ul>
         <br>Try asking about a specific health topic, or use our <strong>Symptom Analyzer</strong> for symptom-based guidance.
         <br><br><span class='text-xs text-yellow-400'>⚠️ For medical advice, always consult a healthcare professional.</span>"""
     })
-
 
 @app.route('/api/records', methods=['GET'])
 @rate_limit()
@@ -471,7 +480,6 @@ def get_records():
         'bmi_records': bmi_records[-20:]
     })
 
-
 @app.route('/api/records/clear', methods=['POST'])
 @rate_limit()
 def clear_records():
@@ -480,22 +488,91 @@ def clear_records():
     bmi_records.clear()
     return jsonify({'status': 'success', 'message': 'All records cleared'})
 
+# ============== NEW ROUTES (Phase 1) ==============
+
+@app.route('/api/health-tip', methods=['GET'])
+@rate_limit()
+def get_health_tip():
+    """
+    Get daily health tip (Feature #19)
+    Uses day of year to deterministically select a tip
+    """
+    day_of_year = int(datetime.now().strftime('%j'))  # 1-366
+    
+    tips = []
+    if health_tips_data and 'tips' in health_tips_data:
+        tips = health_tips_data['tips']
+    
+    if not tips:
+        # Default fallback tips
+        tips = [
+            {"id": 1, "text": "Drink at least 8 glasses of water today.", "category": "Hydration", "icon": "💧", "detail": "Staying hydrated helps kidney function, skin health, and energy levels."},
+            {"id": 2, "text": "Take a 10-minute walk after meals.", "category": "Exercise", "icon": "🚶", "detail": "Walking after meals aids digestion and helps regulate blood sugar levels."},
+            {"id": 3, "text": "Practice deep breathing for 5 minutes.", "category": "Mental Health", "icon": "🧘", "detail": "Deep breathing activates the parasympathetic nervous system, reducing stress and anxiety."}
+        ]
+    
+    tip = tips[day_of_year % len(tips)]
+    
+    return jsonify({
+        'text': tip.get('text', ''),
+        'category': tip.get('category', 'Health'),
+        'icon': tip.get('icon', '💡'),
+        'detail': tip.get('detail', '')
+    })
+
+@app.route('/api/feedback', methods=['POST'])
+@rate_limit()
+def submit_feedback():
+    """
+    Submit feedback on a prediction (Feature #18)
+    Expected JSON: { prediction_id, rating (1-5), was_accurate (bool), comment (optional) }
+    """
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    prediction_id = data.get('prediction_id')
+    rating = data.get('rating')
+    was_accurate = data.get('was_accurate')
+    comment = data.get('comment', '')
+    
+    # Validate
+    if not prediction_id:
+        return jsonify({'error': 'prediction_id is required'}), 400
+    if not rating or not isinstance(rating, int) or rating < 1 or rating > 5:
+        return jsonify({'error': 'rating must be an integer between 1 and 5'}), 400
+    
+    # Truncate comment
+    if comment and len(comment) > 200:
+        comment = comment[:200]
+    
+    feedback_manager.add_feedback(prediction_id, rating, was_accurate, comment)
+    
+    return jsonify({'status': 'success', 'message': 'Feedback submitted successfully'})
+
+@app.route('/api/feedback/summary', methods=['GET'])
+@rate_limit()
+def get_feedback_summary():
+    """
+    Get feedback summary statistics (Feature #18)
+    Returns average rating, total feedback count, accuracy rate
+    """
+    summary = feedback_manager.get_summary()
+    return jsonify(summary)
 
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Endpoint not found'}), 404
 
-
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
-
 @app.errorhandler(400)
 def bad_request(error):
     return jsonify({'error': 'Bad request'}), 400
-
 
 # ============== MAIN ==============
 
