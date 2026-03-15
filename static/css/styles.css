@@ -1,8 +1,285 @@
 /* HealthCare AI - Elegant Custom Styles */
+/* ============================================ */
+/* CSS VARIABLES - DARK THEME (DEFAULT)         */
+/* ============================================ */
+:root {
+    --bg-primary: #020617;
+    --bg-secondary: #0f172a;
+    --bg-tertiary: #1e293b;
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: rgba(255, 255, 255, 0.05);
+    --border-color-hover: rgba(255, 255, 255, 0.15);
+    --card-bg: rgba(15, 23, 42, 0.8);
+    --card-bg-hover: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --overlay-bg: rgba(0, 0, 0, 0.8);
+    --modal-bg-start: rgba(30, 41, 59, 0.98);
+    --modal-bg-end: rgba(15, 23, 42, 0.98);
+    --scrollbar-track: rgba(255, 255, 255, 0.02);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+    --header-bg: rgba(2, 6, 23, 0.5);
+    --stat-card-bg: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    --feature-card-bg: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    --chat-bot-bg: rgba(255, 255, 255, 0.05);
+    --chat-bot-border: rgba(255, 255, 255, 0.1);
+    --symptom-tag-bg: rgba(255, 255, 255, 0.05);
+    --symptom-tag-border: rgba(255, 255, 255, 0.1);
+    --symptom-tag-hover-bg: rgba(255, 255, 255, 0.1);
+    --result-card-bg: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    --result-card-border: rgba(255, 255, 255, 0.1);
+    --body-bg: #020617;
+    --body-text: #ffffff;
+}
+
+/* ============================================ */
+/* LIGHT THEME OVERRIDES                        */
+/* ============================================ */
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-color-hover: rgba(0, 0, 0, 0.15);
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-bg-hover: rgba(0, 0, 0, 0.03);
+    --input-bg: rgba(0, 0, 0, 0.03);
+    --input-border: rgba(0, 0, 0, 0.12);
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+    --modal-bg-start: rgba(255, 255, 255, 0.98);
+    --modal-bg-end: rgba(248, 250, 252, 0.98);
+    --scrollbar-track: rgba(0, 0, 0, 0.03);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+    --header-bg: rgba(255, 255, 255, 0.8);
+    --stat-card-bg: linear-gradient(135deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.01) 100%);
+    --feature-card-bg: linear-gradient(135deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.01) 100%);
+    --chat-bot-bg: rgba(0, 0, 0, 0.03);
+    --chat-bot-border: rgba(0, 0, 0, 0.1);
+    --symptom-tag-bg: rgba(0, 0, 0, 0.04);
+    --symptom-tag-border: rgba(0, 0, 0, 0.1);
+    --symptom-tag-hover-bg: rgba(0, 0, 0, 0.08);
+    --result-card-bg: linear-gradient(135deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.01) 100%);
+    --result-card-border: rgba(0, 0, 0, 0.1);
+    --body-bg: #f8fafc;
+    --body-text: #0f172a;
+}
+
+/* Light theme specific overrides */
+[data-theme="light"] body {
+    background-color: var(--body-bg) !important;
+    color: var(--body-text) !important;
+}
+
+[data-theme="light"] .bg-slate-950 {
+    background-color: var(--bg-primary) !important;
+}
+
+[data-theme="light"] .text-white {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .text-gray-300 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .text-gray-400 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .text-gray-600 {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .hero-title-text {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .border-white\/5,
+[data-theme="light"] .border-white\/10 {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .bg-white\/5 {
+    background-color: var(--input-bg) !important;
+}
+
+[data-theme="light"] .bg-white\/10 {
+    background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .header-bg {
+    background-color: var(--header-bg) !important;
+}
+
+[data-theme="light"] .glass-card {
+    background: var(--card-bg) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .stat-card {
+    background: var(--stat-card-bg) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .feature-card {
+    background: var(--feature-card-bg) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .feature-card:hover {
+    border-color: var(--border-color-hover) !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .modal-content {
+    background: linear-gradient(180deg, var(--modal-bg-start) 0%, var(--modal-bg-end) 100%) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .modal-overlay {
+    background: var(--overlay-bg) !important;
+}
+
+[data-theme="light"] .modal-header {
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .modal-close {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .modal-close:hover {
+    color: var(--text-primary) !important;
+    background: var(--card-bg-hover) !important;
+}
+
+[data-theme="light"] .input-field {
+    background: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .input-field::placeholder {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .symptom-tag {
+    background: var(--symptom-tag-bg) !important;
+    border-color: var(--symptom-tag-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .symptom-tag:hover {
+    background: var(--symptom-tag-hover-bg) !important;
+}
+
+[data-theme="light"] .symptom-tag.selected {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+    color: white !important;
+}
+
+[data-theme="light"] .symptom-container {
+    background: var(--input-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .chat-message.bot {
+    background: var(--chat-bot-bg) !important;
+    border-color: var(--chat-bot-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .chat-message.user {
+    color: white !important;
+}
+
+[data-theme="light"] .result-card {
+    background: var(--result-card-bg) !important;
+    border-color: var(--result-card-border) !important;
+}
+
+[data-theme="light"] .disease-card {
+    background: var(--card-bg-hover) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .disease-card:hover {
+    background: rgba(0,0,0,0.05) !important;
+}
+
+[data-theme="light"] .record-item {
+    background: var(--card-bg-hover) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .record-item:hover {
+    background: rgba(0,0,0,0.05) !important;
+}
+
+[data-theme="light"] .category-btn {
+    background: var(--symptom-tag-bg) !important;
+    border-color: var(--symptom-tag-border) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .category-btn:hover {
+    background: var(--symptom-tag-hover-bg) !important;
+}
+
+[data-theme="light"] .category-btn.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
+    color: white !important;
+}
+
+[data-theme="light"] .confidence-bar {
+    background: rgba(0,0,0,0.08) !important;
+}
+
+[data-theme="light"] .disclaimer-modal-content {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .disclaimer-modal-content .text-gray-300 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .health-tip-card {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .feedback-card {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* Animated background blobs - dimmer in light mode */
+[data-theme="light"] .fixed.inset-0.overflow-hidden .absolute {
+    opacity: 0.3;
+}
 
 /* Font */
 .font-inter {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Body base */
+body {
+    background-color: var(--body-bg);
+    color: var(--body-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Animations */
@@ -40,6 +317,16 @@
     50% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
 }
 
+@keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes spotlight-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 15px rgba(59, 130, 246, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.3), 0 0 25px rgba(59, 130, 246, 0.2); }
+}
+
 .animate-pulse-slow {
     animation: pulse-slow 8s ease-in-out infinite;
 }
@@ -52,6 +339,10 @@
     animation: slide-up 0.4s ease-out;
 }
 
+.animate-fade-out {
+    animation: fade-out 0.3s ease-out forwards;
+}
+
 .animation-delay-2000 {
     animation-delay: 2s;
 }
@@ -60,18 +351,31 @@
     animation-delay: 4s;
 }
 
-/* Glass Card Effect */
-.glass-card {
-    background: rgba(15, 23, 42, 0.8);
+/* Header background */
+.header-bg {
+    background-color: var(--header-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 }
 
+/* Hero title for light mode */
+.hero-title-text {
+    color: var(--text-primary);
+}
+
+/* Glass Card Effect */
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: background 0.3s ease;
+}
+
 /* Stat Card */
 .stat-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    background: var(--stat-card-bg);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
     border-radius: 1rem;
     padding: 1.5rem;
     text-align: center;
@@ -79,15 +383,15 @@
 }
 
 .stat-card:hover {
-    border-color: rgba(255,255,255,0.1);
+    border-color: var(--border-color-hover);
     transform: translateY(-2px);
 }
 
 /* Feature Card */
 .feature-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    background: var(--feature-card-bg);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
     border-radius: 1.5rem;
     padding: 1.5rem;
     cursor: pointer;
@@ -95,7 +399,7 @@
 }
 
 .feature-card:hover {
-    border-color: rgba(255,255,255,0.15);
+    border-color: var(--border-color-hover);
     transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
@@ -122,14 +426,14 @@
 .modal-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.8);
+    background: var(--overlay-bg);
     backdrop-filter: blur(4px);
 }
 
 .modal-content {
     position: relative;
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: linear-gradient(180deg, var(--modal-bg-start) 0%, var(--modal-bg-end) 100%);
+    border: 1px solid var(--input-border);
     border-radius: 1.5rem;
     width: 100%;
     max-height: 90vh;
@@ -140,7 +444,7 @@
 
 .modal-header {
     padding: 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -153,14 +457,14 @@
     align-items: center;
     justify-content: center;
     font-size: 1.75rem;
-    color: rgba(255,255,255,0.5);
+    color: var(--text-muted);
     transition: all 0.2s;
     border-radius: 0.75rem;
 }
 
 .modal-close:hover {
-    color: white;
-    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+    background: var(--card-bg-hover);
 }
 
 .modal-body {
@@ -173,10 +477,10 @@
 .input-field {
     width: 100%;
     padding: 0.875rem 1rem;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
     border-radius: 0.75rem;
-    color: white;
+    color: var(--text-primary);
     font-size: 0.95rem;
     transition: all 0.2s;
 }
@@ -188,7 +492,7 @@
 }
 
 .input-field::placeholder {
-    color: rgba(255,255,255,0.3);
+    color: var(--text-muted);
 }
 
 /* Buttons */
@@ -220,25 +524,26 @@
     max-height: 280px;
     overflow-y: auto;
     padding: 0.5rem;
-    background: rgba(255,255,255,0.02);
+    background: var(--input-bg);
     border-radius: 0.75rem;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
 }
 
 .symptom-tag {
     padding: 0.5rem 1rem;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--symptom-tag-bg);
+    border: 1px solid var(--symptom-tag-border);
     border-radius: 0.5rem;
     font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.2s;
     user-select: none;
+    color: var(--text-primary);
 }
 
 .symptom-tag:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.2);
+    background: var(--symptom-tag-hover-bg);
+    border-color: var(--border-color-hover);
 }
 
 .symptom-tag.selected {
@@ -253,14 +558,15 @@
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
     border-radius: 9999px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--symptom-tag-bg);
+    border: 1px solid var(--symptom-tag-border);
     transition: all 0.2s;
     cursor: pointer;
+    color: var(--text-primary);
 }
 
 .category-btn:hover {
-    background: rgba(255,255,255,0.1);
+    background: var(--symptom-tag-hover-bg);
 }
 
 .category-btn.active {
@@ -278,16 +584,18 @@
 }
 
 .chat-message.bot {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--chat-bot-bg);
+    border: 1px solid var(--chat-bot-border);
     border-top-left-radius: 0.25rem;
     margin-right: auto;
+    color: var(--text-primary);
 }
 
 .chat-message.user {
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     border-top-right-radius: 0.25rem;
     margin-left: auto;
+    color: white;
 }
 
 /* Severity Badges */
@@ -298,6 +606,7 @@
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
+    color: white;
 }
 
 .severity-low {
@@ -318,8 +627,8 @@
 
 /* Disease Card */
 .disease-card {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--card-bg-hover);
+    border: 1px solid var(--border-color);
     border-radius: 1rem;
     padding: 1.25rem;
     margin-bottom: 1rem;
@@ -328,8 +637,8 @@
 }
 
 .disease-card:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.1);
+    background: var(--symptom-tag-hover-bg);
+    border-color: var(--border-color-hover);
 }
 
 .disease-card.low { border-left-color: #22c55e; }
@@ -340,7 +649,7 @@
 /* Confidence Bar */
 .confidence-bar {
     height: 8px;
-    background: rgba(255,255,255,0.1);
+    background: var(--input-bg);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -353,8 +662,8 @@
 
 /* Result Card */
 .result-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--result-card-bg);
+    border: 1px solid var(--result-card-border);
     border-radius: 1rem;
     padding: 1.5rem;
     margin-bottom: 1rem;
@@ -363,24 +672,24 @@
 
 /* Record Item */
 .record-item {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--card-bg-hover);
+    border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     padding: 1rem;
     transition: all 0.2s;
 }
 
 .record-item:hover {
-    background: rgba(255,255,255,0.05);
+    background: var(--symptom-tag-hover-bg);
 }
 
 /* Loading Spinner */
 .loading-spinner {
     width: 24px;
     height: 24px;
-    border: 3px solid rgba(255,255,255,0.2);
+    border: 3px solid var(--input-border);
     border-radius: 50%;
-    border-top-color: white;
+    border-top-color: var(--text-primary);
     animation: spin 0.8s linear infinite;
     display: inline-block;
 }
@@ -397,17 +706,333 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.02);
+    background: var(--scrollbar-track);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.2);
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* ============================================ */
+/* DISCLAIMER MODAL (Feature #21)               */
+/* ============================================ */
+.disclaimer-modal-overlay {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.disclaimer-checkbox-label {
+    transition: all 0.2s ease;
+}
+
+.disclaimer-checkbox-label:hover {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+#disclaimerAcceptBtn {
+    transition: all 0.4s ease;
+}
+
+#disclaimerAcceptBtn:not(:disabled) {
+    opacity: 1;
+    cursor: pointer;
+}
+
+/* ============================================ */
+/* HEALTH TIP CARD (Feature #19)                */
+/* ============================================ */
+.health-tip-card {
+    transition: all 0.3s ease;
+}
+
+.tip-detail-content {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    max-height: 0;
+    opacity: 0;
+}
+
+.tip-detail-content.expanded {
+    max-height: 200px;
+    opacity: 1;
+}
+
+.tip-title {
+    color: var(--text-primary);
+}
+
+/* ============================================ */
+/* FEEDBACK ON PREDICTIONS (Feature #18)        */
+/* ============================================ */
+.feedback-card {
+    background: var(--result-card-bg);
+    border: 1px solid var(--result-card-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    animation: slide-up 0.4s ease-out;
+}
+
+.star-rating {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.star-rating .star {
+    font-size: 1.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.star-rating .star:hover,
+.star-rating .star.hovered {
+    color: #fbbf24;
+    transform: scale(1.2);
+}
+
+.star-rating .star.selected {
+    color: #f59e0b;
+}
+
+.feedback-accuracy-btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.feedback-accuracy-btn:hover {
+    border-color: var(--border-color-hover);
+}
+
+.feedback-accuracy-btn.selected-yes {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border-color: transparent;
+    color: white;
+}
+
+.feedback-accuracy-btn.selected-no {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: transparent;
+    color: white;
+}
+
+.feedback-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 0.75rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    resize: none;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.feedback-textarea:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.feedback-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.feedback-thank-you {
+    text-align: center;
+    padding: 2rem 1rem;
+    animation: scale-in 0.3s ease-out;
+}
+
+/* ============================================ */
+/* ONBOARDING TUTORIAL (Feature #17)            */
+/* ============================================ */
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.75);
+    transition: opacity 0.3s ease;
+}
+
+.onboarding-spotlight {
+    position: fixed;
+    z-index: 201;
+    border-radius: 1rem;
+    border: 3px solid rgba(59, 130, 246, 0.6);
+    animation: spotlight-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+    transition: all 0.4s ease;
+}
+
+.onboarding-tooltip {
+    position: fixed;
+    z-index: 202;
+    max-width: 360px;
+    width: 90vw;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: scale-in 0.3s ease-out;
+}
+
+.onboarding-tooltip-content {
+    background: linear-gradient(180deg, var(--modal-bg-start) 0%, var(--modal-bg-end) 100%);
+    border: 1px solid var(--input-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.onboarding-tooltip-arrow {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--modal-bg-start);
+    border: 1px solid var(--input-border);
+    transform: rotate(45deg);
+}
+
+.onboarding-step-counter {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.onboarding-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.onboarding-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.onboarding-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.onboarding-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.onboarding-btn-skip {
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+}
+
+.onboarding-btn-skip:hover {
+    color: var(--text-primary);
+}
+
+.onboarding-btn-prev {
+    color: var(--text-secondary);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+}
+
+.onboarding-btn-prev:hover {
+    background: var(--symptom-tag-hover-bg);
+}
+
+.onboarding-btn-next {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.onboarding-btn-next:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Welcome/Final modal for onboarding */
+.onboarding-welcome-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 202;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.onboarding-welcome-content {
+    background: linear-gradient(180deg, var(--modal-bg-start) 0%, var(--modal-bg-end) 100%);
+    border: 1px solid var(--input-border);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    animation: scale-in 0.4s ease-out;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* Progress dots for onboarding */
+.onboarding-progress {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+
+.onboarding-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--input-border);
+    transition: all 0.3s ease;
+}
+
+.onboarding-dot.active {
+    background: #3b82f6;
+    transform: scale(1.3);
+}
+
+.onboarding-dot.completed {
+    background: #22c55e;
+}
+
+/* ============================================ */
+/* THEME TOGGLE BUTTON                          */
+/* ============================================ */
+#themeToggleBtn {
+    transition: all 0.3s ease;
+}
+
+#themeToggleBtn:hover {
+    transform: rotate(15deg);
 }
 
 /* Responsive Adjustments */
@@ -428,6 +1053,15 @@
     
     .stat-card {
         padding: 1rem;
+    }
+
+    .onboarding-tooltip {
+        max-width: 300px;
+    }
+
+    .onboarding-welcome-content {
+        padding: 1.5rem;
+        margin: 1rem;
     }
 }
 
