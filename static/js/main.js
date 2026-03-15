@@ -1,7 +1,44 @@
 /**
  * HealthCare AI - Main JavaScript
  * Handles UI interactions and API calls
+ * Phase 1: Added Theme Manager, Disclaimer Flow, Health Tips, Prediction Feedback
  */
+
+// ============================================
+// THEME MANAGER (Feature #15)
+// ============================================
+const themeManager = {
+    init() {
+        const saved = localStorage.getItem('theme') || 'dark';
+        this.apply(saved);
+    },
+    apply(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        if (sunIcon && moonIcon) {
+            if (theme === 'light') {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        }
+        localStorage.setItem('theme', theme);
+    },
+    toggle() {
+        const current = localStorage.getItem('theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        this.apply(next);
+    },
+    get() {
+        return localStorage.getItem('theme') || 'dark';
+    }
+};
+
+// Initialize theme immediately to prevent flash
+themeManager.init();
 
 // State management
 const state = {
@@ -11,7 +48,8 @@ const state = {
     categories: {},
     diseases: {},
     modelMetrics: null,
-    predictionCount: parseInt(localStorage.getItem('predictionCount') || '0')
+    predictionCount: parseInt(localStorage.getItem('predictionCount') || '0'),
+    currentPredictionId: null
 };
 
 // Initialize the application
@@ -27,6 +65,19 @@ async function initApp() {
     
     // Update UI
     updateStats();
+    
+    // Load daily health tip (Feature #19)
+    loadHealthTip();
+    
+    // Start onboarding if first time (Feature #17)
+    setTimeout(() => {
+        if (!localStorage.getItem('onboarding_complete')) {
+            if (typeof OnboardingManager !== 'undefined') {
+                window.onboardingManager = new OnboardingManager();
+                window.onboardingManager.start();
+            }
+        }
+    }, 1000);
     
     console.log('Application initialized successfully');
 }
@@ -70,7 +121,6 @@ async function loadModelMetrics() {
                 <span class="text-gray-400">ONLINE</span>
             `;
         }
-        
         // Update accuracy display
         document.getElementById('accuracyRate').textContent = `${metrics.cross_val_mean}%`;
         
@@ -119,18 +169,41 @@ function sanitize(str) {
     return div.innerHTML;
 }
 
-// Disclaimer functions
+// ============================================
+// DISCLAIMER FLOW (Feature #21 - Enhanced)
+// ============================================
+function onDisclaimerCheckboxChange() {
+    const checkbox = document.getElementById('disclaimerCheckbox');
+    const btn = document.getElementById('disclaimerAcceptBtn');
+    if (checkbox.checked) {
+        btn.disabled = false;
+    } else {
+        btn.disabled = true;
+    }
+}
+
 function acceptDisclaimer() {
-    document.getElementById('disclaimerModal').classList.add('hidden');
-    document.getElementById('disclaimerModal').classList.remove('visible');
-    document.getElementById('mainApp').classList.remove('hidden');
-    localStorage.setItem('disclaimerAccepted', 'true');
-    initApp();
+    const checkbox = document.getElementById('disclaimerCheckbox');
+    if (!checkbox || !checkbox.checked) return;
+    
+    const modal = document.getElementById('disclaimerModal');
+    modal.classList.add('animate-fade-out');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        document.getElementById('mainApp').classList.remove('hidden');
+        localStorage.setItem('disclaimer_accepted', 'true');
+        // Also set old key for backward compatibility
+        localStorage.setItem('disclaimerAccepted', 'true');
+        initApp();
+    }, 300);
 }
 
 function showDisclaimer() {
-    document.getElementById('disclaimerModal').classList.remove('hidden');
-    document.getElementById('disclaimerModal').classList.add('visible');
+    const modal = document.getElementById('disclaimerModal');
+    modal.classList.remove('hidden', 'animate-fade-out');
+    modal.style.display = 'flex';
 }
 
 // Emergency functions
@@ -138,7 +211,6 @@ function showEmergency(message) {
     const banner = document.getElementById('emergencyBanner');
     document.getElementById('emergencyMessage').textContent = message;
     banner.classList.remove('hidden');
-    // Scroll to top to ensure visibility
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -153,7 +225,6 @@ function openModal(modalId) {
     modal.classList.add('visible');
     document.body.style.overflow = 'hidden';
     
-    // Initialize modal content
     if (modalId === 'symptomChecker') {
         initSymptomChecker();
     } else if (modalId === 'diseaseDb') {
@@ -175,7 +246,6 @@ function initSymptomChecker() {
     const categoryFilters = document.getElementById('categoryFilters');
     const categories = Object.keys(state.categories);
     
-    // Render category filters
     categoryFilters.innerHTML = `
         <button onclick="filterByCategory(null)" class="category-btn ${state.activeCategory === null ? 'active' : ''}">
             All Symptoms
@@ -245,6 +315,11 @@ function updateSelectedDisplay() {
     }
 }
 
+// Generate a prediction ID
+function generatePredictionId() {
+    return 'pred_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
 // Analyze symptoms with backend ML model
 async function analyzeSymptoms() {
     if (state.selectedSymptoms.size === 0) {
@@ -257,11 +332,13 @@ async function analyzeSymptoms() {
     const ageInput = document.getElementById('patientAge').value;
     const age = ageInput ? parseInt(ageInput) : null;
     
-    // Show loading state
     const btn = document.getElementById('analyzeBtn');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<span class="flex items-center justify-center gap-2"><span class="loading-spinner"></span> Analyzing...</span>';
     btn.disabled = true;
+    
+    // Generate prediction ID for feedback
+    state.currentPredictionId = generatePredictionId();
     
     try {
         const response = await apiCall('/api/predict', 'POST', {
@@ -270,17 +347,14 @@ async function analyzeSymptoms() {
             age
         });
         
-        // Handle emergency
         if (response.emergency && response.emergency.is_emergency) {
             showEmergency(response.emergency.message);
         }
         
-        // Update prediction count
         state.predictionCount++;
         localStorage.setItem('predictionCount', state.predictionCount.toString());
         updateStats();
         
-        // Display results
         displayResults(response);
         
     } catch (error) {
@@ -296,14 +370,13 @@ async function analyzeSymptoms() {
 function displayResults(response) {
     const container = document.getElementById('analysisResults');
     container.classList.remove('hidden');
-    
     const predictions = response.predictions || [];
     const emergency = response.emergency;
     
     if (predictions.length === 0) {
         container.innerHTML = `
             <div class="result-card text-center py-8">
-                <div class="text-5xl mb-4">🤔</div>
+                <div class="text-5xl mb-4">🔍</div>
                 <h3 class="text-xl font-semibold mb-2">No Strong Matches Found</h3>
                 <p class="text-gray-400">Your symptoms don't strongly match any conditions in our database. Please consult a healthcare professional for proper evaluation.</p>
             </div>
@@ -349,7 +422,7 @@ function displayResults(response) {
                 <div class="flex items-start justify-between mb-4">
                     <div>
                         <h4 class="text-lg font-bold flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-full bg-gradient-to-r ${severityColors[pred.severity]} flex items-center justify-center text-xs font-bold">${idx + 1}</span>
+                            <span class="w-6 h-6 rounded-full bg-gradient-to-r ${severityColors[pred.severity]} flex items-center justify-center text-xs font-bold text-white">${idx + 1}</span>
                             ${sanitize(pred.disease)}
                         </h4>
                         <span class="text-xs text-gray-400">${sanitize(pred.category)}</span>
@@ -390,14 +463,233 @@ function displayResults(response) {
         
         <div class="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mt-6">
             <p class="text-sm text-red-300 flex items-start gap-2">
-                <span>🏥</span>
+                <span>⚠</span>
                 <span><strong>Reminder:</strong> This is not a medical diagnosis. Please consult a qualified healthcare provider for proper evaluation and treatment.</span>
             </p>
         </div>
+        
+        <!-- Prediction Feedback Section (Feature #18) -->
+        <div id="feedbackSection" class="feedback-card">
+            <h4 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span>📝</span> Was this prediction helpful?
+            </h4>
+            
+            <!-- Star Rating -->
+            <div class="mb-4">
+                <p class="text-sm text-gray-400 mb-2">Rate this prediction:</p>
+                <div class="star-rating" id="starRating">
+                    ${[1,2,3,4,5].map(i => `<span class="star" data-rating="${i}" onclick="setFeedbackRating(${i})" onmouseenter="hoverStars(${i})" onmouseleave="unhoverStars()">☆</span>`).join('')}
+                </div>
+            </div>
+            
+            <!-- Accuracy Toggle -->
+            <div class="mb-4">
+                <p class="text-sm text-gray-400 mb-2">Was this accurate for you?</p>
+                <div class="flex gap-3">
+                    <button onclick="setFeedbackAccuracy(true)" id="accuracyYes" class="feedback-accuracy-btn">👍 Yes</button>
+                    <button onclick="setFeedbackAccuracy(false)" id="accuracyNo" class="feedback-accuracy-btn">👎 No</button>
+                </div>
+            </div>
+            
+            <!-- Comment -->
+            <div class="mb-4">
+                <textarea id="feedbackComment" class="feedback-textarea" rows="2" maxlength="200" placeholder="Tell us more (optional) — max 200 characters"></textarea>
+                <p class="text-xs text-gray-500 mt-1 text-right"><span id="feedbackCharCount">0</span>/200</p>
+            </div>
+            
+            <!-- Submit -->
+            <button onclick="submitFeedback()" id="feedbackSubmitBtn" class="btn-primary px-6 py-2 text-sm">
+                Submit Feedback
+            </button>
+        </div>
     `;
     
-    // Scroll to results
+    // Add char counter listener
+    const commentEl = document.getElementById('feedbackComment');
+    if (commentEl) {
+        commentEl.addEventListener('input', () => {
+            document.getElementById('feedbackCharCount').textContent = commentEl.value.length;
+        });
+    }
+    
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ============================================
+// PREDICTION FEEDBACK (Feature #18)
+// ============================================
+let feedbackState = {
+    rating: 0,
+    wasAccurate: null,
+    comment: ''
+};
+
+function setFeedbackRating(rating) {
+    feedbackState.rating = rating;
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach((star, idx) => {
+        if (idx < rating) {
+            star.classList.add('selected');
+            star.textContent = '★';
+        } else {
+            star.classList.remove('selected');
+            star.textContent = '☆';
+        }
+    });
+}
+
+function hoverStars(rating) {
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach((star, idx) => {
+        if (idx < rating) {
+            star.classList.add('hovered');
+            star.textContent = '★';
+        }
+    });
+}
+
+function unhoverStars() {
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach((star, idx) => {
+        star.classList.remove('hovered');
+        if (idx < feedbackState.rating) {
+            star.textContent = '★';
+        } else {
+            star.textContent = '☆';
+        }
+    });
+}
+
+function setFeedbackAccuracy(isAccurate) {
+    feedbackState.wasAccurate = isAccurate;
+    const yesBtn = document.getElementById('accuracyYes');
+    const noBtn = document.getElementById('accuracyNo');
+    
+    yesBtn.classList.remove('selected-yes');
+    noBtn.classList.remove('selected-no');
+    
+    if (isAccurate) {
+        yesBtn.classList.add('selected-yes');
+    } else {
+        noBtn.classList.add('selected-no');
+    }
+}
+
+async function submitFeedback() {
+    const comment = document.getElementById('feedbackComment')?.value || '';
+    feedbackState.comment = comment;
+    
+    if (feedbackState.rating === 0) {
+        alert('Please select a star rating');
+        return;
+    }
+    
+    const btn = document.getElementById('feedbackSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    
+    try {
+        await apiCall('/api/feedback', 'POST', {
+            prediction_id: state.currentPredictionId,
+            rating: feedbackState.rating,
+            was_accurate: feedbackState.wasAccurate,
+            comment: feedbackState.comment
+        });
+        
+        // Replace feedback form with thank you
+        const section = document.getElementById('feedbackSection');
+        section.innerHTML = `
+            <div class="feedback-thank-you">
+                <div class="text-4xl mb-3">🎉</div>
+                <h4 class="text-lg font-semibold mb-2">Thank you for your feedback!</h4>
+                <p class="text-sm text-gray-400">Your input helps us improve our predictions.</p>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Feedback submission failed:', error);
+        btn.disabled = false;
+        btn.textContent = 'Submit Feedback';
+        alert('Failed to submit feedback. Please try again.');
+    }
+    
+    // Reset feedback state
+    feedbackState = { rating: 0, wasAccurate: null, comment: '' };
+}
+
+// ============================================
+// DAILY HEALTH TIP (Feature #19)
+// ============================================
+async function loadHealthTip() {
+    // Check if tip was dismissed today
+    const lastDismissed = localStorage.getItem('healthTipDismissed');
+    if (lastDismissed) {
+        const dismissedTime = parseInt(lastDismissed);
+        const hoursSince = (Date.now() - dismissedTime) / (1000 * 60 * 60);
+        if (hoursSince < 24) {
+            return; // Still within 24-hour dismiss window
+        }
+    }
+    
+    try {
+        const data = await apiCall('/api/health-tip');
+        if (data && data.text) {
+            const tipCard = document.getElementById('healthTipCard');
+            const tipIcon = document.getElementById('tipIcon');
+            const tipText = document.getElementById('tipText');
+            const tipDetail = document.getElementById('tipDetail');
+            const tipBadge = document.getElementById('tipCategoryBadge');
+            
+            tipIcon.textContent = data.icon || '💡';
+            tipText.textContent = data.text;
+            tipDetail.textContent = data.detail || '';
+            tipBadge.textContent = data.category || 'Health';
+            
+            tipCard.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Failed to load health tip:', error);
+    }
+}
+
+function toggleTipDetail() {
+    const detail = document.getElementById('tipDetail');
+    const arrow = document.getElementById('tipLearnMoreArrow');
+    const text = document.getElementById('tipLearnMoreText');
+    
+    if (detail.classList.contains('expanded')) {
+        detail.classList.remove('expanded');
+        detail.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+        text.textContent = 'Learn More';
+    } else {
+        detail.classList.remove('hidden');
+        // Small delay for transition
+        requestAnimationFrame(() => {
+            detail.classList.add('expanded');
+        });
+        arrow.style.transform = 'rotate(180deg)';
+        text.textContent = 'Show Less';
+    }
+}
+
+function dismissHealthTip() {
+    const tipCard = document.getElementById('healthTipCard');
+    tipCard.classList.add('animate-fade-out');
+    setTimeout(() => {
+        tipCard.classList.add('hidden');
+    }, 300);
+    localStorage.setItem('healthTipDismissed', Date.now().toString());
+}
+
+// ============================================
+// ONBOARDING REPLAY (Feature #17)
+// ============================================
+function replayTutorial() {
+    localStorage.removeItem('onboarding_complete');
+    if (typeof OnboardingManager !== 'undefined') {
+        window.onboardingManager = new OnboardingManager();
+        window.onboardingManager.start();
+    }
 }
 
 // BMI Calculator
@@ -415,15 +707,9 @@ async function calculateBMI() {
     
     try {
         const response = await apiCall('/api/bmi', 'POST', {
-            weight,
-            height,
-            age,
-            gender,
-            activity
+            weight, height, age, gender, activity
         });
-        
         displayBMIResults(response);
-        
     } catch (error) {
         console.error('BMI calculation failed:', error);
         alert('Failed to calculate BMI. Please check your inputs.');
@@ -487,7 +773,6 @@ async function sendChatMessage() {
     
     const chatContainer = document.getElementById('chatMessages');
     
-    // Add user message
     chatContainer.innerHTML += `
         <div class="chat-message user">
             ${sanitize(message)}
@@ -496,7 +781,6 @@ async function sendChatMessage() {
     
     input.value = '';
     
-    // Add loading indicator
     chatContainer.innerHTML += `
         <div class="chat-message bot" id="loadingMsg">
             <div class="loading-spinner"></div>
@@ -506,17 +790,13 @@ async function sendChatMessage() {
     
     try {
         const response = await apiCall('/api/chat', 'POST', { message });
-        
-        // Remove loading indicator
         document.getElementById('loadingMsg').remove();
         
-        // Add bot response
         chatContainer.innerHTML += `
             <div class="chat-message bot">
                 ${response.response}
             </div>
         `;
-        
     } catch (error) {
         document.getElementById('loadingMsg').remove();
         chatContainer.innerHTML += `
@@ -552,7 +832,6 @@ function filterDiseases(category, event) {
     );
     displayDiseases(filtered);
     
-    // Update button states
     document.querySelectorAll('#diseaseCategoryFilters button').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -649,9 +928,13 @@ async function clearAllRecords() {
 
 // Check if disclaimer was accepted on page load
 window.onload = function() {
-    if (localStorage.getItem('disclaimerAccepted') === 'true') {
-        document.getElementById('disclaimerModal').classList.add('hidden');
-        document.getElementById('disclaimerModal').classList.remove('visible');
+    // Apply theme immediately
+    themeManager.init();
+    
+    if (localStorage.getItem('disclaimer_accepted') === 'true' || localStorage.getItem('disclaimerAccepted') === 'true') {
+        const modal = document.getElementById('disclaimerModal');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
         document.getElementById('mainApp').classList.remove('hidden');
         initApp();
     }
