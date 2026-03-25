@@ -2,11 +2,11 @@
 HealthCare AI - Flask Application
 Machine Learning powered disease prediction system
 """
-
 import os
 import sys
 import json
-from datetime import datetime
+import uuid
+from datetime import datetime, timedelta
 from functools import wraps
 import time
 
@@ -29,7 +29,6 @@ try:
     from utils.sanitizer import InputSanitizer, RequestValidator
 except ImportError as e:
     print(f"Warning: sanitizer not available: {e}")
-    # Provide fallback
     class InputSanitizer:
         @classmethod
         def sanitize_chat_message(cls, msg):
@@ -63,7 +62,6 @@ try:
     from utils.emergency import EmergencyDetector
 except ImportError as e:
     print(f"Warning: emergency detector not available: {e}")
-    # Provide fallback
     class EmergencyDetector:
         def __init__(self, path=None):
             pass
@@ -104,6 +102,29 @@ except ImportError as e:
         def get_recent(self, n=20):
             return self.feedbacks[-n:]
 
+# Import vitals manager
+try:
+    from utils.vitals import VitalsManager
+except ImportError as e:
+    print(f"Warning: vitals manager not available: {e}")
+    class VitalsManager:
+        def __init__(self):
+            self.readings = []
+        def add_reading(self, d):
+            return False, "VitalsManager not available"
+        def get_readings(self, days=30):
+            return []
+        def get_reading_by_id(self, rid):
+            return None
+        def delete_reading(self, rid):
+            return False
+        def get_stats(self, metric, days=30):
+            return {'min': None, 'max': None, 'avg': None, 'count': 0}
+        def get_all_stats(self, days=30):
+            return {}
+        def check_alerts(self, d):
+            return []
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -117,17 +138,16 @@ disease_model = DiseasePredictionModel(
 )
 print("Model initialization complete!")
 
-# Initialize emergency detector
+# Initialize managers
 emergency_detector = EmergencyDetector(Config.SYMPTOMS_DATA_PATH)
-
-# Initialize feedback manager (Feature #18)
 feedback_manager = FeedbackManager()
+vitals_manager = VitalsManager()
 
-# In-memory storage for health records (in production, use a database)
+# In-memory storage for health records
 health_records = []
 bmi_records = []
 
-# Load health tips (Feature #19)
+# Load health tips
 health_tips_data = None
 try:
     tips_path = os.path.join(os.path.dirname(__file__), 'data', 'health_tips.json')
@@ -150,22 +170,15 @@ def rate_limit(max_requests=60, window=60):
         def wrapped(*args, **kwargs):
             client_ip = request.remote_addr
             current_time = time.time()
-            
-            # Clean old entries
             request_counts[client_ip] = [
                 t for t in request_counts.get(client_ip, [])
                 if current_time - t < window
             ]
-            
-            # Check rate limit
             if len(request_counts.get(client_ip, [])) >= max_requests:
                 return jsonify({'error': 'Rate limit exceeded. Please try again later.'}), 429
-            
-            # Record request
             if client_ip not in request_counts:
                 request_counts[client_ip] = []
             request_counts[client_ip].append(current_time)
-            
             return f(*args, **kwargs)
         return wrapped
     return decorator
@@ -228,63 +241,47 @@ def index():
 @app.route('/api/model/metrics', methods=['GET'])
 @rate_limit()
 def get_model_metrics():
-    """Get ML model performance metrics"""
     metrics = disease_model.get_model_metrics()
     return jsonify(metrics)
 
 @app.route('/api/symptoms', methods=['GET'])
 @rate_limit()
 def get_symptoms():
-    """Get all valid symptoms and categories"""
     all_symptoms = sorted(list(disease_model.get_valid_symptoms()))
     categories = disease_model.get_symptoms_by_category()
-    
-    return jsonify({
-        'symptoms': all_symptoms,
-        'categories': categories
-    })
+    return jsonify({'symptoms': all_symptoms, 'categories': categories})
 
 @app.route('/api/diseases', methods=['GET'])
 @rate_limit()
 def get_diseases():
-    """Get all diseases from database"""
     diseases = disease_model.get_all_diseases()
     return jsonify({'diseases': diseases})
 
 @app.route('/api/predict', methods=['POST'])
 @rate_limit(max_requests=30)
 def predict_disease():
-    """
-    Predict diseases based on symptoms using ML model
-    """
     data = request.get_json()
-    
     if not data:
         return jsonify({'error': 'No data provided'}), 400
-    
-    # Validate and sanitize input
+
     valid_symptoms = disease_model.get_valid_symptoms()
     is_valid, result = RequestValidator.validate_prediction_request(data, valid_symptoms)
-    
     if not is_valid:
         return jsonify({'error': result}), 400
-    
+
     symptoms = result['symptoms']
     duration = result['duration']
     age = result['age']
-    
-    # Check for emergency
+
     emergency_assessment = emergency_detector.assess_emergency(symptoms, duration, age)
-    
-    # Get ML predictions
+
     predictions = disease_model.predict(
         symptoms=symptoms,
         duration=duration,
         age=age,
         top_k=Config.MAX_PREDICTIONS
     )
-    
-    # Format predictions for response
+
     predictions_data = []
     for pred in predictions:
         predictions_data.append({
@@ -299,19 +296,28 @@ def predict_disease():
             'when_to_seek_help': pred.when_to_seek_help,
             'risk_factors': pred.risk_factors
         })
-    
-    # Store in health records
+
+    # Store in health records — EXTENDED for Feature #1 (Timeline)
     if predictions_data:
+        record_id = str(uuid.uuid4())
+        emergency_level = emergency_assessment.level.name if hasattr(emergency_assessment.level, 'name') else 'NONE'
         health_records.append({
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'id': record_id,
+            'timestamp': datetime.now().isoformat(),
             'symptoms': symptoms,
+            'top_prediction': predictions_data[0]['disease'],
+            'confidence': predictions_data[0]['confidence'],
+            'duration': duration,
+            'age': age,
+            'emergency_level': emergency_level,
+            'severity': predictions_data[0]['severity'],
+            'all_predictions': predictions_data,
+            # Keep old keys for backward compatibility
             'disease': predictions_data[0]['disease'],
-            'confidence': predictions_data[0]['confidence']
         })
-        # Keep only last 100 records
-        while len(health_records) > 100:
+        while len(health_records) > 200:
             health_records.pop(0)
-    
+
     return jsonify({
         'predictions': predictions_data,
         'emergency': {
@@ -327,28 +333,22 @@ def predict_disease():
 @app.route('/api/bmi', methods=['POST'])
 @rate_limit()
 def calculate_bmi():
-    """Calculate BMI and provide health insights"""
     data = request.get_json()
-    
     if not data:
         return jsonify({'error': 'No data provided'}), 400
-    
-    # Validate input
+
     is_valid, result = RequestValidator.validate_bmi_request(data)
-    
     if not is_valid:
         return jsonify({'error': result}), 400
-    
+
     weight = result['weight']
-    height = result['height'] / 100  # Convert cm to m
+    height = result['height'] / 100
     age = result['age']
     gender = result['gender']
     activity = result['activity']
-    
-    # Calculate BMI
+
     bmi = round(weight / (height ** 2), 1)
-    
-    # Determine category
+
     if bmi < 18.5:
         category = "Underweight"
         advice = "Consider consulting a nutritionist to develop a healthy weight gain plan with balanced nutrition and possibly increased caloric intake."
@@ -361,30 +361,25 @@ def calculate_bmi():
     else:
         category = "Obese"
         advice = "Please consult a healthcare provider for a comprehensive weight management plan. They can help create a safe, sustainable approach to improving your health."
-    
-    # Calculate ideal weight range
+
     ideal_low = round(18.5 * (height ** 2), 1)
     ideal_high = round(24.9 * (height ** 2), 1)
-    
-    # Calculate BMR using Mifflin-St Jeor Equation
+
     if gender == 'male':
         bmr = round(10 * weight + 6.25 * (height * 100) - 5 * age + 5)
     else:
         bmr = round(10 * weight + 6.25 * (height * 100) - 5 * age - 161)
-    
-    # Calculate TDEE
+
     tdee = round(bmr * activity)
-    
-    # Store BMI record
+
     bmi_records.append({
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'bmi': bmi,
         'category': category
     })
-    # Keep only last 100 records
     while len(bmi_records) > 100:
         bmi_records.pop(0)
-    
+
     return jsonify({
         'bmi': bmi,
         'category': category,
@@ -397,122 +392,91 @@ def calculate_bmi():
 @app.route('/api/chat', methods=['POST'])
 @rate_limit()
 def chat():
-    """Health chatbot endpoint"""
     data = request.get_json()
-    
     if not data:
         return jsonify({'error': 'No data provided'}), 400
-    
-    # Validate input
+
     is_valid, result = RequestValidator.validate_chat_request(data)
-    
     if not is_valid:
         return jsonify({'error': result}), 400
-    
+
     message = result['message'].lower()
-    
-    # Check for emergency keywords first
-    emergency_words = ['emergency', 'dying', "can't breathe", 'heart attack', 'stroke', 
+
+    emergency_words = ['emergency', 'dying', "can't breathe", 'heart attack', 'stroke',
                        'severe pain', 'unconscious', 'suicide', 'kill myself']
     if any(word in message for word in emergency_words):
         return jsonify({
             'response': """<span class='text-red-400 font-bold'>🚨 If this is a medical emergency, please call emergency services immediately:</span>
-            <ul class='mt-2'>
-            <li><strong>US:</strong> 911</li>
-            <li><strong>UK:</strong> 1066</li>
-            <li><strong>EU:</strong> 112</li>
-            <li><strong>Mental Health Crisis (US):</strong> 988</li>
-            </ul>
-            <p class='mt-2'>Do not wait for online advice in an emergency. Every minute can be critical.</p>"""
+<ul class='mt-2'>
+<li><strong>US:</strong> 911</li>
+<li><strong>UK:</strong> 1066</li>
+<li><strong>EU:</strong> 112</li>
+<li><strong>Mental Health Crisis (US):</strong> 988</li>
+</ul>
+<p class='mt-2'>Do not wait for online advice in an emergency. Every minute can be critical.</p>"""
         })
-    
-    # Check for greetings
+
     if any(word in message for word in CHAT_KNOWLEDGE['greetings']):
-        return jsonify({
-            'response': "Hello! I'm your health assistant. How can I help you today? Ask me about symptoms, health tips, nutrition, exercise, or wellness advice!<br><br><span class='text-xs text-yellow-400'>⚠️ Remember: I provide general information only, not medical advice.</span>"
-        })
-    
-    # Check for thanks
+        return jsonify({'response': "Hello! I'm your health assistant. How can I help you today? Ask me about symptoms, health tips, nutrition, exercise, or wellness advice!<br><br><span class='text-xs text-yellow-400'>⚠️ Remember: I provide general information only, not medical advice.</span>"})
+
     if any(word in message for word in CHAT_KNOWLEDGE['thanks']):
-        return jsonify({
-            'response': "You're welcome! Remember, I provide general information only. Always consult healthcare professionals for medical advice. Stay healthy! 💪"
-        })
-    
-    # Find matching topic
-    for topic, data in CHAT_KNOWLEDGE['topics'].items():
-        if any(keyword in message for keyword in data['keywords']):
-            return jsonify({
-                'response': f"{data['response']}<br><br><span class='text-xs text-yellow-400'>⚠️ This is general information. Consult a healthcare provider for personalized advice.</span>"
-            })
-    
-    # Check for disease-related questions
+        return jsonify({'response': "You're welcome! Remember, I provide general information only. Always consult healthcare professionals for medical advice. Stay healthy! 💪"})
+
+    for topic, tdata in CHAT_KNOWLEDGE['topics'].items():
+        if any(keyword in message for keyword in tdata['keywords']):
+            return jsonify({'response': f"{tdata['response']}<br><br><span class='text-xs text-yellow-400'>⚠️ This is general information. Consult a healthcare provider for personalized advice.</span>"})
+
     diseases = disease_model.get_all_diseases()
     for disease_name, info in diseases.items():
         if disease_name.lower() in message:
             symptoms_text = ', '.join(info.get('symptoms', [])[:5])
-            return jsonify({
-                'response': f"""<strong>{disease_name}</strong><br><br>
-                {info.get('description', 'No description available.')}<br><br>
-                <strong>Common symptoms:</strong> {symptoms_text}<br><br>
-                <strong>Recommendations:</strong> {info.get('recommendations', 'Consult a healthcare provider.')}<br><br>
-                <span class='text-xs text-yellow-400'>⚠️ This is general information. Please consult a healthcare provider for diagnosis and treatment.</span>"""
-            })
-    
-    # Default response
-    return jsonify({
-        'response': """I can help with general health information on topics like:
-        <ul class='mt-2 space-y-1'>
-        <li>• Common symptoms (fever, headache, cold)</li>
-        <li>• Lifestyle (diet, exercise, sleep, stress)</li>
-        <li>• Conditions (diabetes, heart health)</li>
-        <li>• Prevention (vaccination, hydration)</li>
-        </ul>
-        <br>Try asking about a specific health topic, or use our <strong>Symptom Analyzer</strong> for symptom-based guidance.
-        <br><br><span class='text-xs text-yellow-400'>⚠️ For medical advice, always consult a healthcare professional.</span>"""
-    })
+            return jsonify({'response': f"""<strong>{disease_name}</strong><br><br>
+{info.get('description', 'No description available.')}<br><br>
+<strong>Common symptoms:</strong> {symptoms_text}<br><br>
+<strong>Recommendations:</strong> {info.get('recommendations', 'Consult a healthcare provider.')}<br><br>
+<span class='text-xs text-yellow-400'>⚠️ This is general information. Please consult a healthcare provider for diagnosis and treatment.</span>"""})
+
+    return jsonify({'response': """I can help with general health information on topics like:
+<ul class='mt-2 space-y-1'>
+<li>• Common symptoms (fever, headache, cold)</li>
+<li>• Lifestyle (diet, exercise, sleep, stress)</li>
+<li>• Conditions (diabetes, heart health)</li>
+<li>• Prevention (vaccination, hydration)</li>
+</ul>
+<br>Try asking about a specific health topic, or use our <strong>Symptom Analyzer</strong> for symptom-based guidance.
+<br><br><span class='text-xs text-yellow-400'>⚠️ For medical advice, always consult a healthcare professional.</span>"""})
 
 @app.route('/api/records', methods=['GET'])
 @rate_limit()
 def get_records():
-    """Get health records history"""
     return jsonify({
-        'health_records': health_records[-20:],  # Last 20 records
+        'health_records': health_records[-20:],
         'bmi_records': bmi_records[-20:]
     })
 
 @app.route('/api/records/clear', methods=['POST'])
 @rate_limit()
 def clear_records():
-    """Clear all health records"""
     health_records.clear()
     bmi_records.clear()
     return jsonify({'status': 'success', 'message': 'All records cleared'})
 
-# ============== NEW ROUTES (Phase 1) ==============
+# ============== PHASE 1 ROUTES ==============
 
 @app.route('/api/health-tip', methods=['GET'])
 @rate_limit()
 def get_health_tip():
-    """
-    Get daily health tip (Feature #19)
-    Uses day of year to deterministically select a tip
-    """
-    day_of_year = int(datetime.now().strftime('%j'))  # 1-366
-    
+    day_of_year = int(datetime.now().strftime('%j'))
     tips = []
     if health_tips_data and 'tips' in health_tips_data:
         tips = health_tips_data['tips']
-    
     if not tips:
-        # Default fallback tips
         tips = [
             {"id": 1, "text": "Drink at least 8 glasses of water today.", "category": "Hydration", "icon": "💧", "detail": "Staying hydrated helps kidney function, skin health, and energy levels."},
             {"id": 2, "text": "Take a 10-minute walk after meals.", "category": "Exercise", "icon": "🚶", "detail": "Walking after meals aids digestion and helps regulate blood sugar levels."},
             {"id": 3, "text": "Practice deep breathing for 5 minutes.", "category": "Mental Health", "icon": "🧘", "detail": "Deep breathing activates the parasympathetic nervous system, reducing stress and anxiety."}
         ]
-    
     tip = tips[day_of_year % len(tips)]
-    
     return jsonify({
         'text': tip.get('text', ''),
         'category': tip.get('category', 'Health'),
@@ -523,43 +487,130 @@ def get_health_tip():
 @app.route('/api/feedback', methods=['POST'])
 @rate_limit()
 def submit_feedback():
-    """
-    Submit feedback on a prediction (Feature #18)
-    Expected JSON: { prediction_id, rating (1-5), was_accurate (bool), comment (optional) }
-    """
     data = request.get_json()
-    
     if not data:
         return jsonify({'error': 'No data provided'}), 400
-    
     prediction_id = data.get('prediction_id')
     rating = data.get('rating')
     was_accurate = data.get('was_accurate')
     comment = data.get('comment', '')
-    
-    # Validate
     if not prediction_id:
         return jsonify({'error': 'prediction_id is required'}), 400
     if not rating or not isinstance(rating, int) or rating < 1 or rating > 5:
         return jsonify({'error': 'rating must be an integer between 1 and 5'}), 400
-    
-    # Truncate comment
     if comment and len(comment) > 200:
         comment = comment[:200]
-    
     feedback_manager.add_feedback(prediction_id, rating, was_accurate, comment)
-    
     return jsonify({'status': 'success', 'message': 'Feedback submitted successfully'})
 
 @app.route('/api/feedback/summary', methods=['GET'])
 @rate_limit()
 def get_feedback_summary():
-    """
-    Get feedback summary statistics (Feature #18)
-    Returns average rating, total feedback count, accuracy rate
-    """
     summary = feedback_manager.get_summary()
     return jsonify(summary)
+
+# ============== PHASE 2 ROUTES ==============
+
+# --- Feature #4: Vitals Tracker ---
+
+@app.route('/api/vitals', methods=['POST'])
+@rate_limit()
+def save_vitals():
+    """Save a vitals reading"""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    success, result = vitals_manager.add_reading(data)
+    if not success:
+        return jsonify({'error': result}), 400
+
+    return jsonify({
+        'status': 'success',
+        'reading': result,
+        'alerts': result.get('alerts', [])
+    })
+
+@app.route('/api/vitals', methods=['GET'])
+@rate_limit()
+def get_vitals():
+    """Get vitals for last N days"""
+    try:
+        days = int(request.args.get('days', 30))
+        days = max(1, min(days, 365))  # clamp between 1 and 365
+    except (TypeError, ValueError):
+        days = 30
+
+    readings = vitals_manager.get_readings(days)
+    stats = vitals_manager.get_all_stats(days)
+
+    return jsonify({
+        'readings': readings,
+        'stats': stats,
+        'count': len(readings)
+    })
+
+@app.route('/api/vitals/<reading_id>', methods=['DELETE'])
+@rate_limit()
+def delete_vitals(reading_id):
+    """Delete a vitals reading by ID"""
+    deleted = vitals_manager.delete_reading(reading_id)
+    if deleted:
+        return jsonify({'status': 'success', 'message': 'Reading deleted'})
+    return jsonify({'error': 'Reading not found'}), 404
+
+# --- Feature #1: Symptom History Timeline ---
+
+@app.route('/api/records/timeline', methods=['GET'])
+@rate_limit()
+def get_timeline():
+    """
+    Returns health records sorted by date, grouped by week.
+    """
+    # Sort all records newest first
+    sorted_records = sorted(
+        health_records,
+        key=lambda x: x.get('timestamp', ''),
+        reverse=True
+    )
+
+    # Group by week
+    weeks = {}
+    for record in sorted_records:
+        try:
+            ts = datetime.fromisoformat(record['timestamp'])
+            # Get Monday of that week
+            monday = ts - timedelta(days=ts.weekday())
+            week_key = monday.strftime('%Y-%m-%d')
+            week_label = monday.strftime('Week of %b %d, %Y')
+        except Exception:
+            week_key = 'unknown'
+            week_label = 'Unknown Date'
+
+        if week_key not in weeks:
+            weeks[week_key] = {
+                'week_start': week_key,
+                'week_label': week_label,
+                'records': []
+            }
+        weeks[week_key]['records'].append(record)
+
+    # Convert to sorted list (newest week first)
+    timeline = sorted(weeks.values(), key=lambda x: x['week_start'], reverse=True)
+
+    return jsonify({
+        'timeline': timeline,
+        'total': len(sorted_records)
+    })
+
+@app.route('/api/records/<record_id>', methods=['GET'])
+@rate_limit()
+def get_record_detail(record_id):
+    """Get full detail of a single health record"""
+    for record in health_records:
+        if record.get('id') == record_id:
+            return jsonify(record)
+    return jsonify({'error': 'Record not found'}), 404
 
 # Error handlers
 @app.errorhandler(404)
@@ -575,26 +626,23 @@ def bad_request(error):
     return jsonify({'error': 'Bad request'}), 400
 
 # ============== MAIN ==============
-
 if __name__ == '__main__':
-    # Create necessary directories
     os.makedirs('models', exist_ok=True)
     os.makedirs('data', exist_ok=True)
-    
-    # Run the application
+
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
-    
+
     print(f"\n{'='*60}")
-    print("  HealthCare AI - Disease Prediction System")
+    print(" HealthCare AI - Disease Prediction System")
     print(f"{'='*60}")
-    print(f"  Server running on: http://localhost:{port}")
-    print(f"  Debug mode: {debug}")
+    print(f" Server running on: http://localhost:{port}")
+    print(f" Debug mode: {debug}")
     metrics = disease_model.get_model_metrics()
-    print(f"  Diseases loaded: {metrics.get('num_diseases', 0)}")
-    print(f"  Symptoms tracked: {metrics.get('num_symptoms', 0)}")
-    print(f"  Model accuracy: {metrics.get('cross_val_mean', 'N/A')}%")
-    print(f"  Model type: {metrics.get('model_type', 'unknown')}")
+    print(f" Diseases loaded: {metrics.get('num_diseases', 0)}")
+    print(f" Symptoms tracked: {metrics.get('num_symptoms', 0)}")
+    print(f" Model accuracy: {metrics.get('cross_val_mean', 'N/A')}%")
+    print(f" Model type: {metrics.get('model_type', 'unknown')}")
     print(f"{'='*60}\n")
-    
+
     app.run(host='0.0.0.0', port=port, debug=debug)
