@@ -168,4 +168,3 @@ This project is for educational purposes only. Not licensed for commercial medic
 
 
 **⚠️ Remember: Always consult healthcare professionals for medical advice. This tool is for educational purposes only.**
-
