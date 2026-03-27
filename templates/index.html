@@ -7,7 +7,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <!-- Add after existing script tags in <head> -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
+
 <body class="min-h-screen font-inter">
     <!-- Animated Background -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
@@ -51,6 +56,7 @@
                 <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                     <p class="text-red-300 text-xs">If you experience severe symptoms like chest pain, difficulty breathing, severe bleeding, or loss of consciousness, <strong>call emergency services immediately</strong>.</p>
                 </div>
+
                 <!-- Checkbox for disclaimer acceptance -->
                 <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-white/10 hover:border-white/20 transition disclaimer-checkbox-label">
                     <input type="checkbox" id="disclaimerCheckbox" onchange="onDisclaimerCheckboxChange()" class="w-5 h-5 rounded accent-blue-500 flex-shrink-0">
@@ -78,13 +84,25 @@
                             <p class="text-xs text-gray-500">Machine Learning Powered</p>
                         </div>
                     </div>
+
                     <div class="flex items-center gap-4">
                         <div class="hidden md:flex items-center gap-2 text-sm bg-white/5 px-4 py-2 rounded-full" id="modelStatus">
                             <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
                             <span class="text-gray-400">Loading Model...</span>
                         </div>
+
+                        <!-- Profile Button (Feature #14) -->
+                        <button onclick="openProfileModal()"
+                            class="profile-nav-btn"
+                            title="My Profile">
+                            <span class="text-lg">👤</span>
+                            <span id="profileStatusDot"
+                                class="w-3 h-3 rounded-full border-2 border-gray-900 bg-red-500 absolute -top-0.5 -right-0.5"></span>
+                        </button>
+
                         <!-- Theme Toggle Button (Feature #15) -->
-                        <button onclick="themeManager.toggle()" id="themeToggleBtn" class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all duration-300" title="Toggle Dark/Light Mode">
+                        <button onclick="themeManager.toggle()" id="themeToggleBtn"
+                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all duration-300" title="Toggle Dark/Light Mode">
                             <svg id="sunIcon" class="w-5 h-5 text-yellow-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                             </svg>
@@ -92,6 +110,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                             </svg>
                         </button>
+
                         <!-- Help / Replay Tutorial Button (Feature #17) -->
                         <button onclick="replayTutorial()" class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all duration-300 text-gray-400 hover:text-white" title="Replay Tutorial">
                             <span class="text-lg font-bold">?</span>
@@ -147,8 +166,7 @@
                                 <span id="tipCategoryBadge" class="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">Health</span>
                             </div>
                             <p id="tipText" class="text-gray-300 text-sm leading-relaxed"></p>
-                            <div id="tipDetail" class="hidden mt-3 text-gray-400 text-sm leading-relaxed tip-detail-content">
-                            </div>
+                            <div id="tipDetail" class="hidden mt-3 text-gray-400 text-sm leading-relaxed tip-detail-content"></div>
                             <button onclick="toggleTipDetail()" id="tipLearnMoreBtn" class="mt-3 text-blue-400 text-sm font-medium hover:text-blue-300 transition flex items-center gap-1">
                                 <span id="tipLearnMoreText">Learn More</span>
                                 <span id="tipLearnMoreArrow" class="transition-transform duration-300">↓</span>
@@ -250,6 +268,36 @@
                         View Guide <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                     </div>
                 </div>
+
+                <!-- Vitals Tracker Card (Feature #4) -->
+                <div onclick="openModal('vitalsModal')" class="feature-card group" id="featureVitals">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center text-3xl shadow-lg shadow-rose-500/25 group-hover:scale-110 transition-transform">
+                            💓
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-rose-500/10 text-rose-400 rounded-full border border-rose-500/20">Tracking</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-rose-400 transition">Vitals Tracker</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Log blood pressure, heart rate, blood glucose, SpO2, and more. View trends with interactive charts.</p>
+                    <div class="mt-4 flex items-center text-rose-400 text-sm font-medium">
+                        Track Vitals <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
+
+                <!-- Health Goals Card (Feature #20) -->
+                <div onclick="openModal('goalsModal')" class="feature-card group" id="featureGoals">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-3xl shadow-lg shadow-violet-500/25 group-hover:scale-110 transition-transform">
+                            🎯
+                        </div>
+                        <span class="px-3 py-1 text-xs font-medium bg-violet-500/10 text-violet-400 rounded-full border border-violet-500/20">Goals</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 group-hover:text-violet-400 transition">Health Goals</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Set and track health goals — weight, water, steps, sleep, medication adherence, and custom goals.</p>
+                    <div class="mt-4 flex items-center text-violet-400 text-sm font-medium">
+                        Set Goals <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </div>
             </div>
 
             <!-- AI Model Info -->
@@ -313,7 +361,6 @@
                 </div>
                 <button onclick="closeModal('symptomChecker')" class="modal-close">&times;</button>
             </div>
-            
             <div class="modal-body">
                 <!-- Patient Info -->
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
@@ -380,7 +427,6 @@
                 </div>
                 <button onclick="closeModal('bmiCalculator')" class="modal-close">&times;</button>
             </div>
-            
             <div class="modal-body">
                 <div class="space-y-4">
                     <div>
@@ -435,7 +481,6 @@
                 </div>
                 <button onclick="closeModal('chatbot')" class="modal-close">&times;</button>
             </div>
-            
             <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chatMessages">
                 <div class="chat-message bot">
                     <p>Hello! I'm your health assistant. I can help you with:</p>
@@ -473,7 +518,6 @@
                 </div>
                 <button onclick="closeModal('diseaseDb')" class="modal-close">&times;</button>
             </div>
-            
             <div class="p-6 border-b border-white/10 flex-shrink-0">
                 <input type="text" id="diseaseSearch" class="input-field mb-4" placeholder="Search diseases..." oninput="searchDiseases()">
                 <div class="flex flex-wrap gap-2" id="diseaseCategoryFilters"></div>
@@ -482,10 +526,10 @@
         </div>
     </div>
 
-    <!-- Health Records Modal -->
+    <!-- Health Records Modal (UPDATED with Timeline tab) -->
     <div id="records" class="modal hidden">
         <div class="modal-overlay" onclick="closeModal('records')"></div>
-        <div class="modal-content max-w-2xl">
+        <div class="modal-content max-w-3xl">
             <div class="modal-header">
                 <div>
                     <h2 class="text-2xl font-bold flex items-center gap-3">
@@ -496,25 +540,82 @@
                 </div>
                 <button onclick="closeModal('records')" class="modal-close">&times;</button>
             </div>
-            
-            <div class="modal-body">
-                <div class="mb-8">
-                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-                        <span class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-sm">🔬</span>
-                        Prediction History
-                    </h3>
-                    <div id="predictionHistory" class="space-y-3"></div>
-                </div>
-                <div class="mb-8">
-                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-                        <span class="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center text-sm">⚖️</span>
-                        BMI History
-                    </h3>
-                    <div id="bmiHistory" class="space-y-3"></div>
-                </div>
-                <button onclick="clearAllRecords()" class="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
-                    Clear All Records
+
+            <!-- Tab Bar -->
+            <div class="flex gap-3 px-6 pt-4 border-b border-white/10 pb-0">
+                <button id="recordsTab-list" onclick="switchRecordsTab('list')"
+                    class="records-tab-btn active pb-3 -mb-px border-b-2 border-blue-500 rounded-none">
+                    📋 Records
                 </button>
+                <button id="recordsTab-timeline" onclick="switchRecordsTab('timeline')"
+                    class="records-tab-btn pb-3 -mb-px border-b-2 border-transparent rounded-none">
+                    📅 Timeline
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- List Panel -->
+                <div id="recordsPanel-list">
+                    <div class="mb-8">
+                        <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-sm">🔬</span>
+                            Prediction History
+                        </h3>
+                        <div id="predictionHistory" class="space-y-3"></div>
+                    </div>
+                    <div class="mb-8">
+                        <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center text-sm">⚖️</span>
+                            BMI History
+                        </h3>
+                        <div id="bmiHistory" class="space-y-3"></div>
+                    </div>
+                    <button onclick="clearAllRecords()"
+                        class="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
+                        Clear All Records
+                    </button>
+                </div>
+
+                <!-- Timeline Panel -->
+                <div id="recordsPanel-timeline" class="hidden">
+                    <!-- Filter bar -->
+                    <div class="flex flex-wrap gap-3 mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+                        <select id="timelineFilterSeverity" class="input-field text-sm py-2 flex-1 min-w-[120px]"
+                            onchange="loadTimeline()">
+                            <option value="">All Severities</option>
+                            <option value="low">Low</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                        <input type="date" id="timelineFilterFrom" class="input-field text-sm py-2 flex-1 min-w-[140px]"
+                            placeholder="From date" onchange="loadTimeline()">
+                        <input type="date" id="timelineFilterTo" class="input-field text-sm py-2 flex-1 min-w-[140px]"
+                            placeholder="To date" onchange="loadTimeline()">
+                    </div>
+
+                    <!-- Timeline entries -->
+                    <div id="timelineContainer"></div>
+
+                    <!-- Patterns section -->
+                    <div class="mt-8 pt-6 border-t border-white/10">
+                        <h4 class="font-semibold mb-4">📊 Patterns</h4>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-sm text-gray-400 mb-3">Most frequent symptoms this month</p>
+                                <div class="chart-container">
+                                    <canvas id="symptomPatternChart"></canvas>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400 mb-3">Most common predictions</p>
+                                <div class="chart-container">
+                                    <canvas id="predictionPatternChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -533,7 +634,6 @@
                 </div>
                 <button onclick="closeModal('emergency')" class="modal-close">&times;</button>
             </div>
-            
             <div class="modal-body">
                 <div class="bg-red-900/30 border border-red-500/50 rounded-xl p-5 mb-6">
                     <h3 class="font-bold text-red-400 mb-4 flex items-center gap-2">
@@ -584,7 +684,399 @@
         </div>
     </div>
 
+    <!-- Profile Modal (Feature #14) -->
+    <div id="profileModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('profileModal')"></div>
+        <div class="modal-content max-w-2xl">
+            <div class="modal-header">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl">👤</span>
+                        My Health Profile
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Your information is stored locally only</p>
+                </div>
+                <button onclick="closeModal('profileModal')" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body space-y-8">
+
+                <!-- Personal Info -->
+                <div>
+                    <p class="profile-section-title">Personal Information</p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                            <input type="text" id="profileName" class="input-field" placeholder="Your name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Date of Birth</label>
+                            <input type="date" id="profileDOB" class="input-field" onchange="updateAgeFromDOB()">
+                            <p id="profileAgeDisplay" class="text-xs text-blue-400 mt-1"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Gender *</label>
+                            <select id="profileGender" class="input-field">
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Height (cm)</label>
+                            <input type="number" id="profileHeight" class="input-field" placeholder="e.g. 175" min="50" max="300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
+                            <input type="number" id="profileWeight" class="input-field" placeholder="e.g. 70" min="10" max="500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Info -->
+                <div>
+                    <p class="profile-section-title">Medical Information</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Blood Type</label>
+                            <select id="profileBloodType" class="input-field">
+                                <option value="">Unknown / Not sure</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+
+                        <!-- Known Conditions Tag Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Known Conditions</label>
+                            <div id="conditionsTags" class="flex flex-wrap gap-2 mb-2"></div>
+                            <div class="tag-input-container">
+                                <input type="text" class="tag-input-bare"
+                                    placeholder="Type condition and press Enter..."
+                                    onkeydown="handleTagInput(event, 'conditionsTags', 'knownConditions')">
+                            </div>
+                            <p class="vital-hint">e.g. Diabetes, Hypertension, Asthma</p>
+                        </div>
+
+                        <!-- Allergies Tag Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Allergies</label>
+                            <div id="allergiesTags" class="flex flex-wrap gap-2 mb-2"></div>
+                            <div class="tag-input-container">
+                                <input type="text" class="tag-input-bare"
+                                    placeholder="Type allergy and press Enter..."
+                                    onkeydown="handleTagInput(event, 'allergiesTags', 'allergies')">
+                            </div>
+                            <p class="vital-hint">e.g. Penicillin, Peanuts, Latex</p>
+                        </div>
+
+                        <!-- Medications Tag Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Current Medications</label>
+                            <div id="medicationsTags" class="flex flex-wrap gap-2 mb-2"></div>
+                            <div class="tag-input-container">
+                                <input type="text" class="tag-input-bare"
+                                    placeholder="Type medication and press Enter..."
+                                    onkeydown="handleTagInput(event, 'medicationsTags', 'medications')">
+                            </div>
+                            <p class="vital-hint">e.g. Metformin 500mg, Lisinopril</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Contact -->
+                <div>
+                    <p class="profile-section-title">Emergency Contact</p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Contact Name</label>
+                            <input type="text" id="profileEmergencyContact" class="input-field" placeholder="e.g. John Doe">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
+                            <input type="tel" id="profileEmergencyPhone" class="input-field" placeholder="e.g. +1-555-0100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <button onclick="saveProfile()"
+                    class="w-full btn-primary py-4 text-base font-semibold">
+                    💾 Save Profile
+                </button>
+
+                <p class="text-xs text-gray-500 text-center">
+                    🔒 All profile data is stored only on your device. Nothing is sent to servers.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vitals Tracker Modal (Feature #4) -->
+    <div id="vitalsModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('vitalsModal')"></div>
+        <div class="modal-content max-w-3xl">
+            <div class="modal-header">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center text-xl">💓</span>
+                        Vitals Tracker
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Log and monitor your vital signs</p>
+                </div>
+                <button onclick="closeModal('vitalsModal')" class="modal-close">&times;</button>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="flex gap-3 px-6 pt-4 border-b border-white/10 pb-0">
+                <button id="vitalsTab-log" onclick="switchVitalsTab('log')"
+                    class="records-tab-btn active pb-3 -mb-px border-b-2 border-rose-500 rounded-none">
+                    📝 Log Vitals
+                </button>
+                <button id="vitalsTab-trends" onclick="switchVitalsTab('trends')"
+                    class="records-tab-btn pb-3 -mb-px border-b-2 border-transparent rounded-none">
+                    📈 Trends
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Log Vitals Panel -->
+                <div id="vitalsPanel-log">
+                    <!-- Date/Time -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Date &amp; Time</label>
+                        <input type="datetime-local" id="vitalsDateTime" class="input-field">
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-5">
+
+                        <!-- Blood Pressure -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Blood Pressure</label>
+                            <div class="flex gap-2">
+                                <div class="vitals-input-group flex-1">
+                                    <input type="number" id="vitalsBPSystolic" class="input-field"
+                                        placeholder="Systolic" min="50" max="250">
+                                    <span class="unit-label">mmHg</span>
+                                </div>
+                                <span class="text-gray-500 self-center">/</span>
+                                <div class="vitals-input-group flex-1">
+                                    <input type="number" id="vitalsBPDiastolic" class="input-field"
+                                        placeholder="Diastolic" min="30" max="150">
+                                    <span class="unit-label">mmHg</span>
+                                </div>
+                            </div>
+                            <p class="vital-hint">Normal: 90–120 / 60–80 mmHg</p>
+                        </div>
+
+                        <!-- Heart Rate -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Heart Rate</label>
+                            <div class="vitals-input-group">
+                                <input type="number" id="vitalsHeartRate" class="input-field"
+                                    placeholder="e.g. 72" min="20" max="300">
+                                <span class="unit-label">bpm</span>
+                            </div>
+                            <p class="vital-hint">Normal: 60–100 bpm</p>
+                        </div>
+
+                        <!-- Blood Glucose -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Blood Glucose (fasting)</label>
+                            <div class="vitals-input-group">
+                                <input type="number" id="vitalsGlucose" class="input-field"
+                                    placeholder="e.g. 90" min="20" max="600">
+                                <span class="unit-label">mg/dL</span>
+                            </div>
+                            <p class="vital-hint">Normal fasting: 70–100 mg/dL</p>
+                        </div>
+
+                        <!-- SpO2 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">SpO2 / Oxygen Saturation</label>
+                            <div class="vitals-input-group">
+                                <input type="number" id="vitalsSPO2" class="input-field"
+                                    placeholder="e.g. 98" min="50" max="100" step="0.1">
+                                <span class="unit-label">%</span>
+                            </div>
+                            <p class="vital-hint">Normal: 95–100%</p>
+                        </div>
+
+                        <!-- Temperature -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Body Temperature</label>
+                            <div class="flex gap-2">
+                                <div class="vitals-input-group flex-1">
+                                    <input type="number" id="vitalsTemp" class="input-field"
+                                        placeholder="e.g. 98.6" step="0.1">
+                                    <span class="unit-label" id="tempUnitDisplay">°F</span>
+                                </div>
+                                <select id="tempUnitToggle" class="input-field w-20 text-sm"
+                                    onchange="document.getElementById('tempUnitDisplay').textContent = '°' + this.value">
+                                    <option value="F">°F</option>
+                                    <option value="C">°C</option>
+                                </select>
+                            </div>
+                            <p class="vital-hint">Normal: 97–99°F (36.1–37.2°C)</p>
+                        </div>
+
+                        <!-- Weight -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Weight</label>
+                            <div class="flex gap-2">
+                                <div class="vitals-input-group flex-1">
+                                    <input type="number" id="vitalsWeight" class="input-field"
+                                        placeholder="e.g. 70" step="0.1" min="1">
+                                    <span class="unit-label" id="weightUnitDisplay">kg</span>
+                                </div>
+                                <select id="weightUnitToggle" class="input-field w-20 text-sm"
+                                    onchange="document.getElementById('weightUnitDisplay').textContent = this.value">
+                                    <option value="kg">kg</option>
+                                    <option value="lbs">lbs</option>
+                                </select>
+                            </div>
+                            <p class="vital-hint">Tracked over time for weight goals</p>
+                        </div>
+                    </div>
+
+                    <!-- Alerts container -->
+                    <div id="vitalsAlerts" class="hidden mt-5 space-y-2"></div>
+
+                    <button onclick="submitVitals()" id="submitVitalsBtn"
+                        class="w-full btn-primary py-4 mt-6">
+                        💾 Save Vitals
+                    </button>
+                </div>
+
+                <!-- Trends Panel -->
+                <div id="vitalsPanel-trends" class="hidden">
+                    <!-- Time filter -->
+                    <div class="flex gap-2 mb-6 flex-wrap">
+                        <button onclick="loadVitalsTrends(7)" data-days="7" class="vitals-days-btn">7 Days</button>
+                        <button onclick="loadVitalsTrends(30)" data-days="30" class="vitals-days-btn active">30 Days</button>
+                        <button onclick="loadVitalsTrends(90)" data-days="90" class="vitals-days-btn">90 Days</button>
+                        <button onclick="exportVitalsCSV()"
+                            class="ml-auto px-4 py-2 rounded-lg text-sm bg-emerald-500/20 border border-emerald-500/30
+                            text-emerald-400 hover:bg-emerald-500/30 transition">
+                            📥 Export CSV
+                        </button>
+                    </div>
+
+                    <!-- Charts -->
+                    <div id="vitalsChartsContainer">
+                        <div class="text-center py-8 text-gray-500">
+                            <div class="text-3xl mb-3">📈</div>
+                            <p>No vitals data yet. Log some vitals to see your trends!</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div id="vitalsStatsContainer" class="mt-6"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Goals Modal (Feature #20) -->
+    <div id="goalsModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal('goalsModal')"></div>
+        <div class="modal-content max-w-2xl">
+            <div class="modal-header">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-xl">🎯</span>
+                        Health Goals
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Set and track your health targets</p>
+                </div>
+                <button onclick="closeModal('goalsModal')" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body space-y-8">
+
+                <!-- Section 1: Active Goals -->
+                <div>
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-violet-400">🏃</span> Active Goals
+                    </h3>
+                    <div id="activeGoalsList"></div>
+                </div>
+
+                <!-- Section 2: Add New Goal -->
+                <div>
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-blue-400">➕</span> Add New Goal
+                    </h3>
+
+                    <!-- Goal Type Selector (Icon Grid) -->
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-2">
+                        <button id="goalType-weight" onclick="selectGoalType('weight')"
+                            class="goal-type-btn border-2 border-white/10 bg-white/5">
+                            <span class="goal-icon">⚖️</span>
+                            <span>Weight</span>
+                        </button>
+                        <button id="goalType-water" onclick="selectGoalType('water')"
+                            class="goal-type-btn border-2 border-white/10 bg-white/5">
+                            <span class="goal-icon">💧</span>
+                            <span>Water</span>
+                        </button>
+                        <button id="goalType-steps" onclick="selectGoalType('steps')"
+                            class="goal-type-btn border-2 border-white/10 bg-white/5">
+                            <span class="goal-icon">👟</span>
+                            <span>Steps</span>
+                        </button>
+                        <button id="goalType-sleep" onclick="selectGoalType('sleep')"
+                            class="goal-type-btn border-2 border-white/10 bg-white/5">
+                            <span class="goal-icon">😴</span>
+                            <span>Sleep</span>
+                        </button>
+                        <button id="goalType-medication" onclick="selectGoalType('medication')"
+                            class="goal-type-btn border-2 border-white/10 bg-white/5">
+                            <span class="goal-icon">💊</span>
+                            <span>Meds</span>
+                        </button>
+                        <button id="goalType-custom" onclick="selectGoalType('custom')"
+                            class="goal-type-btn border-2 border-white/10 bg-white/5">
+                            <span class="goal-icon">🎯</span>
+                            <span>Custom</span>
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Form -->
+                    <div id="goalFormContainer"></div>
+                </div>
+
+                <!-- Section 3: Completed Goals -->
+                <div>
+                    <div class="completed-accordion">
+                        <div class="completed-accordion-header"
+                            onclick="document.getElementById('completedGoalsBody').classList.toggle('hidden')">
+                            <h3 class="font-semibold flex items-center gap-2">
+                                <span class="text-emerald-400">🏆</span> Completed Goals
+                            </h3>
+                            <span class="text-gray-500">▸</span>
+                        </div>
+                        <div id="completedGoalsBody" class="hidden p-4">
+                            <div id="completedGoalsList"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 2 Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/goals.js') }}"></script>
 </body>
 </html>
